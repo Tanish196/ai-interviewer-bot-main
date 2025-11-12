@@ -1,137 +1,144 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap");
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
-}
-
-body,
-html {
+.interview-container {
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-section {
+.interview-container section {
   position: relative;
   width: 100%;
-  height: 100vh;
-  background-color: black;
-  overflow: hidden;
+  min-height: 100vh;
+  background: var(--color-bg);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
+  padding-top: 5rem;
 }
 
 .bg-wrapper {
   width: 100%;
   height: 100%;
-  animation: animateBg 5s linear infinite;
 }
 
-@keyframes animateBg {
-  100% {
-    filter: hue-rotate(360deg);
-  }
-}
-
-#is {
-  font-size: 2em;
-  color: #fff;
-  text-align: center;
-  position: absolute;
-  top: 20px;
-  left: 40%;
-}
-
-#home {
-  font-size: 2em;
-  color: #fff;
-  background-color: transparent;
-  text-align: center;
-  position: absolute;
-  top: 20px;
-  left: 91%;
-}
-
-#b {
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 10px 20px;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.login-box {
-  position: absolute;
-  left: 18%;
-  top: 25%;
-  width: 400px;
-  height: 350px;
-  padding: 20px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  border-radius: 20px;
+.interview-container .interview-header {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  backdrop-filter: blur(15px);
+  padding: 1.25rem 2rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(var(--color-foreground-rgb), 0.03);
+  border-bottom: 1px solid rgba(var(--color-foreground-rgb), 0.08);
+  backdrop-filter: blur(20px);
 }
 
+.interview-container .interview-title {
+  font-size: 1.5rem;
+  color: var(--color-foreground);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.interview-container .home-btn {
+  background: linear-gradient(135deg, rgba(var(--color-foreground-rgb), 0.08), rgba(var(--color-foreground-rgb), 0.04));
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.12);
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  color: var(--color-foreground);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.interview-container .home-btn:hover {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.interview-container .question-box {
+  position: relative;
+  width: 90%;
+  max-width: 700px;
+  padding: 2.5rem;
+  background: linear-gradient(135deg, rgba(var(--color-foreground-rgb), 0.06), rgba(var(--color-foreground-rgb), 0.02));
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.1);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  margin: 2rem auto;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+}
+
+.interview-container .question-box h2 {
+  color: var(--color-foreground);
+  font-size: 1.5rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* Start button area */
 #startdiv {
-  font-size: 2em;
-  color: #fff;
+  font-size: 1.5rem;
+  color: var(--color-foreground);
   background-color: transparent;
   text-align: center;
   position: absolute;
-  top: 52%;
-  left: 47.5%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 #st {
-  background: rgba(0, 255, 0, 0.648); /* light transparent green */
-  /* border: 2px solid rgba(0, 255, 0, 0.5); */
-  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(0, 200, 100, 0.7), rgba(0, 150, 80, 0.6));
+  border: 1px solid rgba(0, 255, 100, 0.3);
+  border-radius: 999px;
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 10px 20px;
-  color: #f3f6f3; /* green text */
-  font-size: 16px;
+  padding: 0.9rem 2rem;
+  color: var(--color-foreground);
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 200ms ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
 
 #st:hover {
-  background: rgba(0, 255, 0, 0.4);
+  background: linear-gradient(135deg, rgba(0, 220, 110, 0.8), rgba(0, 170, 90, 0.7));
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6);
 }
 
+/* Video container */
 #uservedio {
   position: absolute;
   left: 58%;
   top: 25%;
   width: 400px;
   height: 350px;
-  padding: 20px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.5);
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(var(--color-foreground-rgb), 0.06), rgba(var(--color-foreground-rgb), 0.02));
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.1);
   border-radius: 20px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  backdrop-filter: blur(15px);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.5);
 }
 
+/* Microphone controls */
 #micdiv {
-  font-size: 2em;
-  color: #fff;
+  font-size: 1.5rem;
+  color: var(--color-foreground);
   background-color: transparent;
   text-align: center;
   position: absolute;
@@ -140,95 +147,167 @@ section {
 }
 
 #mic {
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(var(--color-foreground-rgb), 0.08), rgba(var(--color-foreground-rgb), 0.04));
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.12);
+  border-radius: 12px;
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 1px 2px;
-  color: white;
-  font-size: 10px;
+  padding: 0.5rem;
+  color: var(--color-foreground);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 200ms ease;
+}
+
+#mic:hover {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  border-color: transparent;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
 
 #mic img {
   width: 40px;
   height: auto;
-  position: relative;
-  bottom: 5px;
+  display: block;
 }
+
 #mic-image {
-  height: 1px;
+  height: auto;
 }
 
 
 
-h2 {
-  font-size: 2em;
-  color: #fff;
-  text-align: center;
+/* Answer section */
+.interview-container .answer-section {
+  width: 90%;
+  max-width: 700px;
+  margin: 1.5rem auto;
 }
 
-#ans {
-  width: 460px;
-  position: absolute;
-  left: 58%;
-  top: 72%;
-}
-
-button {
+.interview-container .answer-section textarea {
   width: 100%;
-  padding: 10px;
-  background: #fff;
+  min-height: 120px;
+  padding: 1.25rem;
+  background: rgba(var(--color-foreground-rgb), 0.03);
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.1);
+  border-radius: 14px;
+  color: var(--color-foreground);
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 200ms ease;
+}
+
+.interview-container .answer-section textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  background: rgba(var(--color-foreground-rgb), 0.05);
+  box-shadow: 0 0 0 3px rgba(var(--color-foreground-rgb), 0.08);
+}
+
+.interview-container .answer-section textarea::placeholder {
+  color: rgba(var(--color-foreground-rgb), 0.4);
+}
+
+.interview-container .submit-btn,
+.interview-container .start-btn {
+  width: 100%;
+  max-width: 320px;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
   border: none;
   outline: none;
-  border-radius: 40px;
+  border-radius: 999px;
   cursor: pointer;
-  font-weight: 500;
-  margin-top: 10px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--color-foreground);
+  margin: 1.5rem auto;
+  display: block;
+  transition: all 200ms ease;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
 
-button:hover {
-  background: #ddd;
+.interview-container .submit-btn:hover,
+.interview-container .start-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 50px rgba(0,0,0,0.6);
 }
 
-.logo {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  width: 150px;
-  height: auto;
-  z-index: 10;
-  filter: none !important;
-  animation: none !important;
+.interview-container .submit-btn:active,
+.interview-container .start-btn:active {
+  transform: translateY(1px) scale(0.98);
 }
 
-p,
-h3 {
-  color: #fff;
+.interview-container .submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.interview-container p,
+.interview-container h3 {
+  color: var(--color-foreground);
   text-align: center;
+  line-height: 1.6;
 }
 
-textarea {
+.interview-container .progress-info {
+  text-align: center;
+  color: rgba(var(--color-foreground-rgb), 0.75);
+  font-size: 1rem;
+  margin-top: 1.5rem;
+  font-weight: 500;
+}
+
+.interview-container .form-group {
+  margin-bottom: 1.75rem;
+}
+
+.interview-container .form-group label {
+  display: block;
+  color: var(--color-foreground);
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
+}
+
+.interview-container .form-group select,
+.interview-container .form-group input {
   width: 100%;
-  height: 80px;
-  padding: 10px;
-  margin-top: 10px;
+  padding: 0.9rem 1rem;
+  background: rgba(var(--color-foreground-rgb), 0.03);
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.1);
+  border-radius: 12px;
+  color: var(--color-foreground);
+  font-size: 1rem;
+  transition: all 200ms ease;
+}
+
+.interview-container .form-group select:focus,
+.interview-container .form-group input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  background: rgba(var(--color-foreground-rgb), 0.05);
+  box-shadow: 0 0 0 3px rgba(var(--color-foreground-rgb), 0.08);
+}
+
+.interview-container .form-group select option {
+  background: var(--color-bg);
+  color: var(--color-foreground);
 }
 #cam button {
-  background: rgba(0, 255, 0, 0.648); /* Semi-transparent green */
-  color: white; /* Text color */
-  padding: 10px 20px; /* Button padding */
-  border: none; /* Remove border */
-  border-radius: 15px; /* Rounded corners */
-  cursor: pointer; /* Pointer cursor on hover */
-  transition: background 0.3s ease; /* Smooth transition for background */
+  background: rgba(0, 255, 0, 0.648); 
+  color: white; 
+  padding: 10px 20px; 
+  border: none; 
+  border-radius: 15px; 
+  cursor: pointer;
+  transition: background 0.3s ease; 
   font-size: 13px;
 }
 
 #cam button:hover {
-  background: rgba(0, 200, 0, 0.8); /* Darker green on hover */
+  background: rgba(0, 200, 0, 0.8); 
 }
 
 @media (max-width: 360px) {
@@ -240,11 +319,11 @@ textarea {
   }
 }
 #video-container {
-  width: 80%; /* Adjust this width as needed */
-  height: 80vh; /* Adjust this height as needed */
+  width: 80%;
+  height: 80vh; 
   position: relative;
   overflow: hidden;
-  background-color: black; /* This is just a background color for the container */
+  background: var(--color-bg); 
 }
 
 #video {
@@ -253,5 +332,5 @@ textarea {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Ensures the video covers the entire div */
+  object-fit: cover; 
 }

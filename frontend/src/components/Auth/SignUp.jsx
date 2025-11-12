@@ -31,11 +31,12 @@ const SignUp = () => {
                 setMessage('User already exists');
             } else {
                 setMessageColor('green');
-                setMessage('Sign-up successful!');
+                setMessage('Sign-up successful! Redirecting...');
 
                 setTimeout(() => {
-                    navigate('/login');
-                }, 2000);
+                    // redirect to home page on successful signup
+                    navigate('/');
+                }, 1200);
             }
         } catch (error) {
             setMessageColor('red');

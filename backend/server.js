@@ -19,8 +19,33 @@ const corsOptions = {
     origin: process.env.FRONTEND_URL || true, // set FRONTEND_URL in production to your Vercel URL
     credentials: true,
 };
+const bodyParser = require('body-parser');
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '8mb' }));
+
+// Replace express.json with a tolerant parser that first reads the raw text and handles literal 'null' bodies gracefully (some clients send JSON 'null').
+app.use(bodyParser.text({ type: 'application/json', limit: '8mb' }));
+app.use((req, res, next) => {
+    const ct = req.headers['content-type'] || '';
+    if (ct.includes('application/json')) {
+        const text = req.body;
+        if (!text || String(text).trim() === 'null' || String(text).trim() === '') {
+            // treat null or empty body as empty object
+            req.body = {};
+            return next();
+        }
+
+        try {
+            req.body = JSON.parse(text);
+            return next();
+        } catch (err) {
+            // forward parse error to error handler
+            return next(err);
+        }
+    }
+    // For non-json content-types, defer to urlencoded parser
+    next();
+});
+
 app.use(express.urlencoded({ extended: true, limit: '8mb' }));
 app.use(express.static('public'));
 

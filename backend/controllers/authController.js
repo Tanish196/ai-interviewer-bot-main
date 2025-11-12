@@ -4,7 +4,8 @@ const { asyncHandler } = require("../utils/errorHandler");
 
 // Sign Up
 exports.signup = asyncHandler(async (req, res) => {
-    const { username, password } = req.headers;
+    const username = req.body?.username ?? req.headers.username;
+    const password = req.body?.password ?? req.headers.password;
 
     if (!username || !password) {
         return res.status(400).json({ mes: false, error: "Username and password are required" });
@@ -24,7 +25,8 @@ exports.signup = asyncHandler(async (req, res) => {
 
 // Sign In
 exports.signin = asyncHandler(async (req, res) => {
-    const { username, password } = req.headers;
+    const username = req.body?.username ?? req.headers.username;
+    const password = req.body?.password ?? req.headers.password;
 
     if (!username || !password) {
         return res.status(400).json({ mes: "false", error: "Username and password are required" });

@@ -1,18 +1,39 @@
-body {
-    background-color: #000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    height: 100vh;
-    margin: 0;
-    font-family: "Segoe UI", sans-serif;
-    color: white;
-    text-align: center;
-  }
+.resume-container {
+  background: var(--color-bg);
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 2rem;
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  color: var(--color-foreground);
+}
+
+.resume-container .resume-header {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.resume-container .resume-header h2 {
+  font-size: 2rem;
+  color: var(--color-foreground);
+  margin: 0;
+}
+
+.resume-container .resume-form,
+.resume-container .resume-feedback {
+  width: 100%;
+  max-width: 800px;
+}
 
   .container {
-    background: #1e1e1e;
+    background: rgba(var(--color-foreground-rgb), 0.04);
     padding: 30px;
     border-radius: 20px;
     box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.05);
@@ -28,19 +49,19 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #1e1e1e;
+  background-color: rgba(var(--color-foreground-rgb), 0.02);
     width: 100%;
     margin-bottom: 20px;
   }
   
   .file-upload-label {
     cursor: pointer;
-    background-color: #333;
+    background-color: rgba(var(--color-foreground-rgb), 0.03);
     padding: 30px 50px;
     border-radius: 40px;
     border: 2px dashed #666;
     box-shadow: 0px 0px 200px -50px rgba(0, 0, 0, 0.5);
-    color: #eee;
+  color: var(--color-foreground);
     text-align: center;
     width: 100%;
   }
@@ -75,7 +96,7 @@ body {
     position: relative;
     display: inline-block;
     background: linear-gradient(to bottom, #1b1c3f, #4a4e91);
-    color: white;
+  color: var(--color-foreground);
     font-family: "Segoe UI", sans-serif;
     font-weight: bold;
     font-size: 18px;
@@ -127,7 +148,7 @@ body {
     margin-top: 15px;
     padding: 8px;
     background-color: #333;
-    color: white;
+  color: var(--color-foreground);
     border: 1px solid #666;
     text-align: center;
   }
@@ -137,11 +158,47 @@ body {
     margin-top: 20px;
   }
   
-  /* Home button style */
-  #home {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    font-size: 14px;
+  /* Action buttons */
+  .resume-container .action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .resume-container .home-btn,
+  .resume-container .retry-btn,
+  .resume-container .analyze-btn {
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+  }
+
+  .resume-container .home-btn {
+    background: rgba(255, 255, 255, 0.1);
+  color: var(--color-foreground);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .resume-container .home-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+
+  .resume-container .analyze-btn,
+  .resume-container .retry-btn {
+    background: linear-gradient(to bottom, #1b1c3f, #4a4e91);
+  color: var(--color-foreground);
+  }
+
+  .resume-container .analyze-btn:hover,
+  .resume-container .retry-btn:hover {
+    background: linear-gradient(to bottom, #2c2f63, #5b67b7);
+    transform: translateY(-2px);
   }
   

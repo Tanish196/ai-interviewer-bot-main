@@ -4,9 +4,7 @@ export const authService = {
     // Sign up
     signup: async (username, password) => {
         try {
-            const response = await api.post('/auth/signup', null, {
-                headers: { username, password }
-            });
+            const response = await api.post('/auth/signup', { username, password });
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;
@@ -16,9 +14,7 @@ export const authService = {
     // Sign in
     signin: async (username, password) => {
         try {
-            const response = await api.post('/auth/signin', null, {
-                headers: { username, password }
-            });
+            const response = await api.post('/auth/signin', { username, password });
             
             if (response.data.mes === "true") {
                 localStorage.setItem('authToken', response.data.jwttoken);
