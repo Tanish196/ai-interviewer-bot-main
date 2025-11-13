@@ -160,7 +160,7 @@ const InterviewStart = () => {
         <div className="interview-container">
             <div className="interview-header">
                 <button onClick={handleHome} className="home-btn">Home</button>
-                <h2>AI Interview Session</h2>
+                <h2 className="interview-title">AI Interview Session</h2>
             </div>
 
             {step === 0 && (

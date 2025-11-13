@@ -49,6 +49,13 @@ const InterviewProgress = () => {
 
         const labels = scoreData.map((_, idx) => `Test ${idx + 1}`);
 
+        // Pull palette colors from CSS variables
+        const styles = getComputedStyle(document.documentElement);
+        const fg = styles.getPropertyValue('--color-foreground').trim() || 'rgb(239,236,227)';
+        const fgRgb = styles.getPropertyValue('--color-foreground-rgb').trim() || '239,236,227';
+        const borderColor = fg;
+        const bgColor = `rgba(${fgRgb}, 0.18)`;
+
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -56,10 +63,10 @@ const InterviewProgress = () => {
                 datasets: [{
                     label: 'Progress',
                     data: scoreData,
-                    borderColor: 'white',
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    borderColor: borderColor,
+                    backgroundColor: bgColor,
                     borderWidth: 2,
-                    pointBackgroundColor: 'white',
+                    pointBackgroundColor: borderColor,
                     pointRadius: 4
                 }]
             },
@@ -71,13 +78,13 @@ const InterviewProgress = () => {
                         beginAtZero: true,
                         max: 10,
                         ticks: {
-                            color: 'white',
+                            color: borderColor,
                             font: { size: 14 }
                         }
                     },
                     x: {
                         ticks: {
-                            color: 'white',
+                            color: borderColor,
                             font: { size: 14 }
                         }
                     }
@@ -85,7 +92,7 @@ const InterviewProgress = () => {
                 plugins: {
                     legend: {
                         labels: {
-                            color: 'white',
+                            color: borderColor,
                             font: { size: 16 }
                         }
                     }

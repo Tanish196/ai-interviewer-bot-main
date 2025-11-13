@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileService, authService } from '../../services/auth';
 import Sidebar from './Sidebar';
@@ -6,7 +6,7 @@ import './Dashboard.css';
 
 const Home = () => {
     const [username, setUsername] = useState('');
-    const [profileImage, setProfileImage] = useState('images.jpeg');
+    const [profileImage, setProfileImage] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -14,44 +14,24 @@ const Home = () => {
         const storedUsername = authService.getCurrentUser() || 'DemoUser';
         setUsername(storedUsername);
 
-        // Load profile image
         loadProfileImage();
     }, []);
 
     const loadProfileImage = async () => {
         try {
+            const cachedImage = localStorage.getItem('profileImage');
+            if (cachedImage) {
+                setProfileImage(cachedImage);
+            }
+
             const result = await profileService.getImage();
             if (result.image) {
                 setProfileImage(result.image);
+                localStorage.setItem('profileImage', result.image);
             }
         } catch (error) {
             console.error('Error fetching image:', error);
         }
-    };
-
-    const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        if (file.size > 2 * 1024 * 1024) {
-            alert('Please upload an image smaller than 2MB.');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            const base64Image = event.target.result;
-            setProfileImage(base64Image);
-
-            try {
-                await profileService.addImage(base64Image);
-                console.log('Image saved successfully');
-            } catch (error) {
-                console.error('Upload failed:', error);
-            }
-        };
-
-        reader.readAsDataURL(file);
     };
 
     const handleSignOut = () => {
@@ -60,12 +40,23 @@ const Home = () => {
         navigate('/');
     };
 
+    const initials = useMemo(() => {
+        if (!username) return '?';
+        const parts = username.split(/\s+/).filter(Boolean);
+        if (parts.length === 1) {
+            return parts[0].slice(0, 2).toUpperCase();
+        }
+        return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }, [username]);
+
     return (
         <div className="dashboard-container">
             <Sidebar 
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
                 onSignOut={handleSignOut}
+                username={username}
+                profileImage={profileImage}
             />
             
             <div className={`overlay ${sidebarOpen ? 'show' : ''}`} onClick={() => setSidebarOpen(false)} />
@@ -79,26 +70,27 @@ const Home = () => {
                     >
                         ☰
                     </button>
-                    
                     <div className="user-info">
-                        <span id="username-display">{username}</span>
-                        <div className="profile-image-container">
-                            <img 
-                                id="profileImage" 
-                                src={profileImage} 
-                                alt="Profile" 
-                                className="profile-img"
-                            />
-                            <input
-                                type="file"
-                                id="imageInput"
-                                accept="image/*"
-                                style={{ display: 'none' }}
-                                onChange={handleImageUpload}
-                            />
-                            <label htmlFor="imageInput" className="upload-label">
-                                Change Photo
-                            </label>
+                        <div className="avatar">
+                            {profileImage ? (
+                                <img
+                                    id="profileImage"
+                                    src={profileImage}
+                                    alt="Profile"
+                                />
+                            ) : (
+                                <span className="avatar-initials" aria-hidden="true">{initials}</span>
+                            )}
+                        </div>
+                        <div className="user-meta">
+                            <span className="user-name" id="username-display">{username}</span>
+                            <button
+                                type="button"
+                                className="profile-link"
+                                onClick={() => navigate('/profile')}
+                            >
+                                Profile Settings
+                            </button>
                         </div>
                     </div>
                 </div>

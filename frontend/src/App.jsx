@@ -8,6 +8,7 @@ import Interview from './pages/Interview';
 import Progress from './pages/Progress';
 import Resume from './pages/Resume';
 import Feedback from './pages/Feedback';
+import Profile from './pages/Profile';
 import './index.css';
 
 // Protected Route Component
@@ -55,6 +56,14 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <Resume />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <Profile />
                         </ProtectedRoute>
                     }
                 />
