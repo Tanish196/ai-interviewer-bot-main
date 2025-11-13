@@ -10,6 +10,7 @@ import Resume from './pages/Resume';
 import Feedback from './pages/Feedback';
 import Profile from './pages/Profile';
 import './index.css';
+import { LoadingProvider } from './context/LoadingContext';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -19,7 +20,8 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
     return (
-        <Router>
+        <LoadingProvider>
+          <Router>
             <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Landing />} />
@@ -79,7 +81,8 @@ function App() {
                 {/* Redirect unknown routes */}
                 <Route path="*" element={<Navigate to="/" />} />
             </Routes>
-        </Router>
+          </Router>
+        </LoadingProvider>
     );
 }
 

@@ -1,11 +1,34 @@
 import { Link } from 'react-router-dom';
 import { Target, BarChart2, TrendingUp, FileText } from 'lucide-react';
+import LiquidEther from '../components/LiquidEther';
 import '../styles/landing.css';
 
 const Landing = () => {
     return (
-        <div className="landing-container">
-            <div className="landing-content">
+        <div className="page-with-liquid">
+            <div className="liquid-ether-layer">
+                <LiquidEther
+                    className="liquid-ether-canvas"
+                    colors={['#4A70A9', '#8FABD4', '#EFECE3']}
+                    mouseForce={20}
+                    cursorSize={100}
+                    isViscous={false}
+                    viscous={30}
+                    iterationsViscous={32}
+                    iterationsPoisson={32}
+                    resolution={0.5}
+                    isBounce={false}
+                    autoDemo
+                    autoSpeed={0.5}
+                    autoIntensity={2.2}
+                    takeoverDuration={0.25}
+                    autoResumeDelay={3000}
+                    autoRampDuration={0.6}
+                />
+            </div>
+
+            <div className="landing-container page-content">
+                <div className="landing-content">
                     <div className="hero">
                         <h1>AI Interviewer Bot</h1>
                         <p className="tagline">Practice interviews with AI-powered feedback</p>
@@ -61,6 +84,7 @@ const Landing = () => {
                         </div>
                     </div>
                 </div>
+            </div>
         </div>
     );
 };

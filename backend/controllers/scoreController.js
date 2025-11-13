@@ -1,4 +1,4 @@
-const { Score, QA } = require("../models/Session");
+const { Score, QA, Qno } = require("../models/Session");
 const { generateContent, parseModelJSON } = require("../utils/geminiClient");
 const jwt = require("jsonwebtoken");
 const { asyncHandler } = require("../utils/errorHandler");
@@ -76,9 +76,9 @@ Only return valid JSON. Do not add commentary.
     await q.save();
 
     // Reset question number
-    let qnoRecord = await QA.findOne({ username }).select('qno');
+    let qnoRecord = await Qno.findOne({ username });
     if (qnoRecord) {
-        qnoRecord.qno = "1";
+        qnoRecord.qno = "0";
         await qnoRecord.save();
     }
 

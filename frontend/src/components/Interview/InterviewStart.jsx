@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { interviewService } from '../../services/auth';
 import './Interview.css';
@@ -10,38 +10,142 @@ const InterviewStart = () => {
     const [currentQuestion, setCurrentQuestion] = useState('');
     const [qno, setQno] = useState(0);
     const [answer, setAnswer] = useState('');
+    const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
     const [isRecording, setIsRecording] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isCameraOn, setIsCameraOn] = useState(false);
+    const [showCameraPrompt, setShowCameraPrompt] = useState(false);
+    const [cameraPrompt, setCameraPrompt] = useState('');
+    const [availableVoices, setAvailableVoices] = useState([]);
+    const videoRef = useRef(null);
+    const cameraStreamRef = useRef(null);
     
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
+    const voicesRef = useRef([]);
+    const voiceListenerRef = useRef(null);
+    const pendingSpeechRef = useRef(null);
     const navigate = useNavigate();
 
-    const speakText = (text) => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        const voices = speechSynthesis.getVoices();
-        if (voices.length) {
-            utterance.voice = voices.find(voice => voice.name === 'Google UK English Male') || voices[2];
+    const speakText = useCallback((text) => {
+        if (!isSpeechEnabled || typeof window === 'undefined' || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance === 'undefined') {
+            return;
         }
-        speechSynthesis.speak(utterance);
+
+        const ensureVoices = () => {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices && voices.length) {
+                voicesRef.current = voices;
+                if (!availableVoices.length) {
+                    setAvailableVoices(voices);
+                }
+            }
+            return voicesRef.current;
+        };
+
+        let voices = voicesRef.current.length ? voicesRef.current : ensureVoices();
+
+        if (!voices || voices.length === 0) {
+            pendingSpeechRef.current = text;
+
+            if (!voiceListenerRef.current) {
+                const handleVoicesReady = () => {
+                    window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesReady);
+                    voiceListenerRef.current = null;
+                    const updatedVoices = window.speechSynthesis.getVoices() || [];
+                    voicesRef.current = updatedVoices;
+                    if (!updatedVoices.length) {
+                        return;
+                    }
+                    setAvailableVoices(updatedVoices);
+                    const pendingText = pendingSpeechRef.current;
+                    pendingSpeechRef.current = null;
+                    if (pendingText) {
+                        speakText(pendingText);
+                    }
+                };
+
+                voiceListenerRef.current = handleVoicesReady;
+                window.speechSynthesis.addEventListener('voiceschanged', handleVoicesReady);
+            }
+
+            window.speechSynthesis.resume?.();
+            return;
+        }
+
+        window.speechSynthesis.cancel();
+    pendingSpeechRef.current = null;
+    const utterance = new window.SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        const preferredVoice = voices.find(voice => voice.name === 'Google UK English Male');
+        const fallbackVoice = voices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith('en'));
+        utterance.voice = preferredVoice || fallbackVoice || voices[0];
+        window.speechSynthesis.speak(utterance);
+    }, [availableVoices.length, isSpeechEnabled]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || !window.speechSynthesis) {
+            return;
+        }
+
+        const updateVoices = () => {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices && voices.length) {
+                voicesRef.current = voices;
+                setAvailableVoices(voices);
+            }
+        };
+
+        updateVoices();
+        window.speechSynthesis.addEventListener('voiceschanged', updateVoices);
+
+        return () => {
+            window.speechSynthesis.removeEventListener('voiceschanged', updateVoices);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (isSpeechEnabled && typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.resume?.();
+        }
+    }, [isSpeechEnabled]);
+
+    const handleSpeechToggle = () => {
+        setIsSpeechEnabled((prev) => {
+            const next = !prev;
+            if (!next && typeof window !== 'undefined' && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+            return next;
+        });
     };
 
-    const handleStart = async () => {
+    const handleStart = async (domainArg) => {
         if (step === 0) {
             const text = "Enter the number of questions you want me to give:";
             setCurrentQuestion(text);
             speakText(text);
             setStep(1);
+            setShowCameraPrompt(false);
+            setCameraPrompt('');
         } else if (step === 1) {
-            const text = "So, what domain are you looking for?";
+            const text = "Great! For a more realistic experience, please turn on your camera using the camera button below when you're ready. What domain are you looking for?";
             setCurrentQuestion(text);
             speakText(text);
+            setShowCameraPrompt(true);
+            setCameraPrompt('Tip: Toggle the camera button whenever you are ready so the AI can assess your body language.');
             setStep(2);
         } else if (step === 2) {
+            // Use explicit domainArg if provided to avoid React state update race
+            const domainToUse = (domainArg && domainArg.trim()) || domain;
+            if (!domainToUse || domainToUse.length === 0) {
+                alert('Please provide a domain.');
+                return;
+            }
+
             setIsLoading(true);
             try {
-                const data = await interviewService.generateQuestion(domain, numberOfQuestions);
+                const data = await interviewService.generateQuestion(domainToUse, numberOfQuestions);
                 setQno(data.qno);
                 setCurrentQuestion(data.question);
                 speakText(data.question);
@@ -71,9 +175,16 @@ const InterviewStart = () => {
             setAnswer('');
             handleStart();
         } else if (step === 2) {
-            setDomain(answer);
+            // Use the provided answer as domain immediately to avoid setState race
+            const domainValue = answer.trim();
+            if (!domainValue) {
+                alert('Please enter a domain.');
+                return;
+            }
+            setDomain(domainValue);
             setAnswer('');
-            handleStart();
+            // Pass domainValue directly to handleStart so we don't rely on state being updated
+            await handleStart(domainValue);
         } else {
             setIsLoading(true);
             try {
@@ -97,6 +208,53 @@ const InterviewStart = () => {
             }
         }
     };
+
+    // Camera support: toggle camera preview and manage stream lifecycle
+    const handleCameraToggle = async () => {
+        if (!isCameraOn) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                cameraStreamRef.current = stream;
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    await videoRef.current.play().catch(() => {});
+                }
+                setIsCameraOn(true);
+                setShowCameraPrompt(false);
+                setCameraPrompt('');
+            } catch (err) {
+                console.error('Camera access error:', err);
+                alert('Please allow camera permissions.');
+            }
+        } else {
+            // Stop tracks
+            try {
+                const s = cameraStreamRef.current;
+                if (s) s.getTracks().forEach(t => t.stop());
+            } catch (e) {
+                console.error('Error stopping camera:', e);
+            }
+            cameraStreamRef.current = null;
+            if (videoRef.current) videoRef.current.srcObject = null;
+            setIsCameraOn(false);
+        }
+    };
+
+    // cleanup on unmount
+    useEffect(() => {
+        return () => {
+            const s = cameraStreamRef.current;
+            if (s) s.getTracks().forEach(t => t.stop());
+            if (typeof window !== 'undefined' && window.speechSynthesis) {
+                if (voiceListenerRef.current) {
+                    window.speechSynthesis.removeEventListener('voiceschanged', voiceListenerRef.current);
+                    voiceListenerRef.current = null;
+                }
+                pendingSpeechRef.current = null;
+                window.speechSynthesis.cancel();
+            }
+        };
+    }, []);
 
     const handleMicToggle = async () => {
         if (!isRecording) {
@@ -178,6 +336,17 @@ const InterviewStart = () => {
                         <p id="question">{currentQuestion}</p>
                     </div>
 
+                    {showCameraPrompt && (
+                        <div className="camera-prompt">
+                            {cameraPrompt}
+                        </div>
+                    )}
+
+                    {/* Camera preview - shown when camera is on */}
+                    <div id="video-container" style={{ display: isCameraOn ? 'block' : 'none' }}>
+                        <video id="video" ref={videoRef} autoPlay muted playsInline style={{ width: '100%', height: '100%' }} />
+                    </div>
+
                     <div className="answer-section">
                         <label htmlFor="answer">Your Answer:</label>
                         <textarea
@@ -189,6 +358,18 @@ const InterviewStart = () => {
                         />
 
                         <div className="controls">
+                            <button
+                                onClick={handleSpeechToggle}
+                                className={`voice-btn${isSpeechEnabled ? '' : ' muted'}`}
+                                type="button"
+                            >
+                                {isSpeechEnabled ? '🔊 Voice On' : '🔇 Voice Off'}
+                            </button>
+                            <div id="cam">
+                                <button onClick={handleCameraToggle} className="cam-btn">
+                                    {isCameraOn ? '📷 Stop Camera' : '📷 Camera'}
+                                </button>
+                            </div>
                             <button 
                                 id="mic" 
                                 onClick={handleMicToggle}

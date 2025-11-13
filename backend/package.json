@@ -19,7 +19,7 @@
   "author": "Your Name",
   "license": "ISC",
   "dependencies": {
-    "@google/generative-ai": "^0.24.0",
+    "@google/generative-ai": "^0.24.1",
     "assemblyai": "^4.9.0",
     "axios": "^1.13.2",
     "chart.js": "^4.5.1",

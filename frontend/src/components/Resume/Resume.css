@@ -1,241 +1,205 @@
-/* Resume Analysis Page - modern palette-aware styles */
 .resume-container {
-  background: var(--color-bg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-  padding: clamp(2rem, 4vw, 4rem) 1.5rem 3rem;
-  margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  position: relative;
+  width: min(100%, 1100px);
+  margin: clamp(2.5rem, 6vh, 4rem) auto;
+  padding: clamp(2rem, 5vw, 3.5rem);
+  border-radius: 34px;
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.08);
+  background: linear-gradient(150deg, rgba(var(--color-foreground-rgb), 0.04), rgba(0, 0, 0, 0.85));
+  box-shadow: 0 44px 120px rgba(0,0,0,0.58);
+  backdrop-filter: blur(28px);
   color: var(--color-foreground);
+  display: grid;
+  gap: clamp(1.75rem, 3vw, 2.75rem);
+  overflow: hidden;
+  min-height: calc(100vh - 6rem);
+}
+
+.resume-container::before,
+.resume-container::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  filter: blur(4px);
+}
+
+.resume-container::before {
+  inset: -50% -25% auto -25%;
+  height: 65%;
+  background: radial-gradient(circle at top, rgba(var(--color-foreground-rgb), 0.02), transparent 70%);
+}
+
+.resume-container::after {
+  inset: auto -30% -50% 20%;
+  height: 60%;
+  background: radial-gradient(circle at bottom, rgba(var(--color-foreground-rgb), 0.02), transparent 75%);
 }
 
 .resume-container .resume-header {
-  width: 100%;
-  max-width: 900px;
+  position: relative;
+  z-index: 1;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 2.5rem;
+  justify-content: space-between;
+  gap: 1.25rem;
   padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, rgba(var(--color-foreground-rgb),0.05), rgba(var(--color-foreground-rgb),0.02));
-  border: 1px solid rgba(var(--color-foreground-rgb),0.08);
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  background: rgba(var(--color-foreground-rgb), 0.04);
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.12);
+  backdrop-filter: blur(20px);
 }
 
 .resume-container .resume-header h2 {
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
   margin: 0;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: 800;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--color-foreground), rgba(var(--color-foreground-rgb),0.7));
-  background-clip: text;
+  letter-spacing: -0.015em;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-foreground));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.resume-container .home-btn {
+  border-radius: 999px;
+  padding: 0.8rem 1.6rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: rgba(var(--color-foreground-rgb), 0.05);
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.18);
+  color: var(--color-foreground);
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.4);
+}
+
+.resume-container .home-btn:hover {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  border-color: transparent;
+  transform: translateY(-3px);
+  box-shadow: 0 22px 55px rgba(0,0,0,0.55);
 }
 
 .resume-container .resume-form,
 .resume-container .resume-feedback {
-  width: 100%;
-  max-width: 900px;
+  position: relative;
+  z-index: 1;
+  border-radius: 28px;
+  padding: clamp(1.75rem, 3vw, 2.5rem);
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.12);
+  background: linear-gradient(155deg, rgba(var(--color-foreground-rgb), 0.05), rgba(0, 0, 0, 0.78));
+  box-shadow: 0 32px 90px rgba(0,0,0,0.5);
+  backdrop-filter: blur(24px);
 }
 
-/* Card wrapper */
-.resume-card {
-  background: linear-gradient(135deg, rgba(var(--color-foreground-rgb),0.06), rgba(var(--color-foreground-rgb),0.02));
-  padding: 2.25rem 2rem;
-  border-radius: 24px;
-  border: 1px solid rgba(var(--color-foreground-rgb),0.1);
-  box-shadow: 0 12px 48px rgba(0,0,0,0.55);
-  backdrop-filter: blur(20px);
-  margin: 0 auto 2.5rem;
+.resume-container .resume-feedback {
+  background: linear-gradient(155deg, rgba(var(--color-foreground-rgb), 0.06), rgba(0, 0, 0, 0.75));
 }
-  
-  /* From Uiverse.io by Fundiman */
-/* File upload */
-.file-upload-form {
+
+.resume-form .form-group {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(var(--color-foreground-rgb), 0.03);
-  width: 100%;
+  flex-direction: column;
+  gap: 0.75rem;
   margin-bottom: 1.5rem;
-  padding: 1.25rem;
-  border: 1px dashed rgba(var(--color-foreground-rgb),0.25);
-  border-radius: 20px;
 }
-  
-  .file-upload-label {
-    cursor: pointer;
-    background-color: rgba(var(--color-foreground-rgb), 0.04);
-    padding: 2rem 2.5rem;
-    border-radius: 24px;
-    border: 2px dashed rgba(var(--color-foreground-rgb),0.25);
-    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
-    color: var(--color-foreground);
-    text-align: center;
-    width: 100%;
-    transition: background 180ms ease, border-color 180ms ease;
-  }
-  
-  .file-upload-label input {
-    display: none;
-  }
-  
-  .file-upload-design {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
-  
-  .browse-button {
-    background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
-    padding: 0.6rem 1.2rem;
-    border-radius: 12px;
-    color: var(--color-foreground);
-    font-weight: 600;
-    font-size: 0.85rem;
-    border: none;
-    cursor: pointer;
-    transition: transform 160ms ease, box-shadow 160ms ease;
-  }
 
-  .browse-button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  }
-  
-  /* From Uiverse.io by KlaujonRuamni */
-  .beautiful-button {
-    position: relative;
-    display: inline-block;
-    background: linear-gradient(to bottom, #1b1c3f, #4a4e91);
+.resume-form label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: rgba(var(--color-foreground-rgb), 0.85);
+}
+
+.resume-form select,
+.resume-form textarea,
+.resume-form input[type="file"] {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.14);
+  background: rgba(var(--color-foreground-rgb), 0.06);
   color: var(--color-foreground);
-    font-family: "Segoe UI", sans-serif;
-    font-weight: bold;
-    font-size: 18px;
-    border: none;
-    border-radius: 30px;
-    padding: 14px 28px;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    animation: button-shimmer 2s infinite;
-    transition: all 0.3s ease-in-out;
-    margin: 10px;
-  }
-  
-  .beautiful-button:hover {
-    background: linear-gradient(to bottom, #2c2f63, #5b67b7);
-    animation: button-particles 1s ease-in-out infinite;
-    transform: translateY(-2px);
-  }
-  
-  .beautiful-button:active {
-    transform: scale(0.95);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  }
-  
-  @keyframes button-shimmer {
-    0% {
-      background-position: left top;
-    }
-    100% {
-      background-position: right bottom;
-    }
-  }
-  
-  @keyframes button-particles {
-    0% {
-      background-position: left top;
-    }
-    100% {
-      background-position: right bottom;
-    }
-  }
-  
-  /* Profile Dropdown styled */
-  #profile {
-    height: 50px;
-    width: 100%;
-    font-size: 1rem;
-    border-radius: 14px;
-    margin-top: 1rem;
-    padding: 0.75rem 1rem;
-    background-color: rgba(var(--color-foreground-rgb),0.04);
-    color: var(--color-foreground);
-    border: 1px solid rgba(var(--color-foreground-rgb),0.15);
-    text-align: center;
-    transition: all 180ms ease;
-  }
-  
-  /* Review button section now at bottom */
-  .bottom-bar {
-    margin-top: 20px;
-  }
-  
-  /* Action buttons */
-  .resume-container .action-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
+  font-size: 0.95rem;
+  padding: 0.9rem 1rem;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
 
-  .resume-container .home-btn,
-  .resume-container .retry-btn,
-  .resume-container .analyze-btn {
-    padding: 0.9rem 1.75rem;
-    border-radius: 999px;
-    font-size: 0.95rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 180ms ease;
-    border: none;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.45);
-  }
+.resume-form textarea {
+  min-height: 240px;
+  resize: vertical;
+  line-height: 1.55;
+}
 
-  .resume-container .home-btn {
-    background: transparent;
-    color: var(--color-foreground);
-    border: 2px solid rgba(var(--color-foreground-rgb),0.2);
-  }
+.resume-form select {
+  cursor: pointer;
+}
 
-  .resume-container .home-btn:hover {
-    background: rgba(var(--color-foreground-rgb),0.08);
-    transform: translateY(-3px);
-  }
+.resume-form input[type="file"] {
+  padding: 0.75rem 1rem;
+}
 
-  .resume-container .analyze-btn,
-  .resume-container .retry-btn {
-    background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
-    color: var(--color-foreground);
-  }
+.resume-form select:focus,
+.resume-form textarea:focus,
+.resume-form input[type="file"]:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  background: rgba(var(--color-foreground-rgb), 0.09);
+  box-shadow: 0 0 0 3px rgba(74, 112, 169, 0.25);
+}
 
-  .resume-container .analyze-btn:hover,
-  .resume-container .retry-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.55);
-  }
-
-  .resume-container .analyze-btn:active,
-  .resume-container .retry-btn:active,
-  .resume-container .home-btn:active {
-    transform: translateY(1px) scale(0.97);
-  }
-
-/* Feedback sections */
-.resume-feedback .feedback-section {
-  background: linear-gradient(135deg, rgba(var(--color-foreground-rgb),0.05), rgba(var(--color-foreground-rgb),0.02));
-  border: 1px solid rgba(var(--color-foreground-rgb),0.08);
-  padding: 1.5rem 1.25rem;
+.resume-preview {
+  width: 100%;
+  max-width: 420px;
   border-radius: 18px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.45);
-  backdrop-filter: blur(12px);
+  margin-top: 1rem;
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.18);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.45);
+}
+
+.resume-container .analyze-btn,
+.resume-container .retry-btn {
+  border-radius: 999px;
+  padding: 0.95rem 1.9rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: none;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  color: var(--color-foreground);
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  box-shadow: 0 20px 58px rgba(0,0,0,0.45);
+}
+
+.resume-container .analyze-btn:hover,
+.resume-container .retry-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 28px 70px rgba(0,0,0,0.55);
+}
+
+.resume-container .analyze-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.35);
+}
+
+.resume-container .action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.resume-container .action-buttons .home-btn {
+  padding: 0.95rem 1.9rem;
+}
+
+.resume-feedback .feedback-section {
+  border-radius: 22px;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.12);
+  background: rgba(var(--color-foreground-rgb), 0.06);
+  box-shadow: 0 22px 70px rgba(0,0,0,0.45);
+  backdrop-filter: blur(18px);
   margin-bottom: 1.5rem;
 }
 
@@ -247,9 +211,9 @@
 }
 
 .resume-feedback .score-text {
-  font-size: 3rem;
+  font-size: clamp(2.8rem, 6vw, 3.8rem);
   font-weight: 800;
-  margin: 0.5rem 0 1rem;
+  margin: 0.6rem 0 1rem;
   background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
   -webkit-background-clip: text;
   background-clip: text;
@@ -258,73 +222,50 @@
 
 .resume-feedback .feedback-content {
   font-size: 0.95rem;
-  line-height: 1.55;
-  color: rgba(var(--color-foreground-rgb),0.8);
+  line-height: 1.6;
+  color: rgba(var(--color-foreground-rgb), 0.82);
 }
 
-/* Preview image */
-.resume-preview {
-  width: 100%;
-  max-width: 420px;
-  border-radius: 16px;
-  margin-top: 1rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  border: 1px solid rgba(var(--color-foreground-rgb),0.15);
+.resume-feedback .feedback-content ul {
+  padding-left: 1.25rem;
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
 }
 
-/* Form groups */
-.resume-form .form-group {
-  margin-bottom: 1.5rem;
-}
-
-.resume-form label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-  display: block;
-  color: rgba(var(--color-foreground-rgb),0.85);
-}
-
-.resume-form textarea {
-  width: 100%;
-  padding: 1rem 1rem;
-  background: rgba(var(--color-foreground-rgb),0.03);
-  border: 1px solid rgba(var(--color-foreground-rgb),0.12);
-  color: var(--color-foreground);
-  border-radius: 16px;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  resize: vertical;
-  min-height: 220px;
-  transition: all 180ms ease;
-}
-
-.resume-form textarea:focus,
-#profile:focus {
-  outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(var(--color-foreground-rgb),0.1);
-  background: rgba(var(--color-foreground-rgb),0.05);
+.resume-feedback .feedback-content li {
+  color: rgba(var(--color-foreground-rgb), 0.82);
 }
 
 @media (max-width: 768px) {
+  .resume-container {
+    padding: 2rem 1.5rem;
+  }
+
   .resume-container .resume-header {
-    flex-direction: column;
-    gap: 1rem;
+    flex-direction: column-reverse;
     text-align: center;
   }
-  .resume-card { padding: 1.75rem 1.25rem; }
-  .resume-container .action-buttons { flex-direction: column; }
-  .resume-container .home-btn,
+
+  .resume-container .home-btn {
+    width: 100%;
+  }
+
+  .resume-container .action-buttons {
+    flex-direction: column;
+  }
+
+  .resume-container .action-buttons .home-btn,
   .resume-container .retry-btn,
-  .resume-container .analyze-btn { width: 100%; }
+  .resume-container .analyze-btn {
+    width: 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .resume-container .home-btn,
-  .resume-container .retry-btn,
   .resume-container .analyze-btn,
-  .browse-button,
-  .file-upload-label { transition: none; }
+  .resume-container .retry-btn {
+    transition: none;
+  }
 }
-  

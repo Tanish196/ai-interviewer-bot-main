@@ -12,6 +12,9 @@
 	--color-foreground-rgb: 239, 236, 227;
 	--color-accent: rgb(143, 171, 212);
 	--color-primary: rgb(74, 112, 169);
+	--brand-purple: var(--color-primary);
+	--brand-pink: var(--color-accent);
+	--brand-lilac: var(--color-foreground);
 	--muted: oklch(0.97 0 0);
 	--glass-1: rgba(239, 236, 227, 0.06);
 	--glass-2: rgba(143, 171, 212, 0.08);
@@ -62,6 +65,29 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 }
 
+.page-with-liquid {
+	position: relative;
+	min-height: 100vh;
+	width: 100%;
+	overflow: hidden;
+	background: rgba(0, 0, 0, 0.85);
+	isolation: isolate;
+}
+
+.liquid-ether-layer {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	opacity: 0.85;
+	pointer-events: none;
+	filter: saturate(1.2);
+}
+
+.page-content {
+	position: relative;
+	z-index: 1;
+}
+
 .centered {
 	display: flex;
 	align-items: center;
@@ -71,6 +97,18 @@ body {
 /* Links */
 a { color: var(--color-accent); }
 a:hover { color: var(--color-primary); }
+
+/* Dropdown/Select styling for better visibility */
+select, select option {
+	background: var(--color-bg);
+	color: var(--color-foreground);
+	border: 1px solid rgba(var(--color-foreground-rgb), 0.15);
+}
+
+select:focus {
+	outline: none;
+	border-color: var(--color-accent);
+}
 
 /* Buttons default */
 button { font-family: inherit; }

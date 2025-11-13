@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--landing-bg);
+  background: linear-gradient(160deg, rgba(74,112,169,0.12), rgba(0, 0, 0, 0.86));
   color: var(--landing-fg);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   padding: clamp(2rem, 4vw, 5rem) clamp(1.5rem, 4vw, 3rem);
@@ -79,8 +79,8 @@
   display: flex;
   gap: 1rem;
   align-items: flex-start;
-  background: linear-gradient(135deg, rgba(var(--fg-rgb), 0.05), rgba(var(--fg-rgb), 0.02));
-  border: 1px solid rgba(var(--fg-rgb), 0.08);
+  background: linear-gradient(140deg, rgba(74,112,169,0.16), rgba(239,236,227,0.12));
+  border: 1px solid rgba(74,112,169,0.15);
   padding: 1.5rem;
   border-radius: 16px;
   backdrop-filter: blur(10px);
@@ -89,8 +89,8 @@
 
 .landing-container .feature-card:hover {
   transform: translateY(-8px);
-  border-color: rgba(var(--fg-rgb), 0.15);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  border-color: rgba(var(--fg-rgb), 0.18);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
   background: linear-gradient(135deg, rgba(var(--fg-rgb), 0.08), rgba(var(--fg-rgb), 0.03));
 }
 
@@ -101,9 +101,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--landing-accent), var(--landing-primary));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
   color: var(--landing-fg);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.5);
 }
 
 .landing-container .feature-body h3 {
@@ -144,14 +144,14 @@
 }
 
 .landing-container .cta-btn.primary {
-  background: linear-gradient(135deg, var(--landing-accent), var(--landing-primary));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
   color: var(--landing-fg);
-  box-shadow: 0 10px 40px rgba(74,112,169,0.4);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
 }
 
 .landing-container .cta-btn.primary:hover {
   transform: translateY(-4px);
-  box-shadow: 0 14px 50px rgba(74,112,169,0.5);
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.6);
 }
 
 .landing-container .cta-btn.secondary {
@@ -179,11 +179,11 @@
 .landing-container .promo-card {
   width: 100%;
   max-width: 500px;
-  background: linear-gradient(135deg, rgba(var(--fg-rgb), 0.06), rgba(var(--fg-rgb), 0.02));
+  background: linear-gradient(140deg, rgba(74,112,169,0.16), rgba(0, 0, 0, 0.65));
   border-radius: 24px;
   padding: 2.5rem;
-  border: 1px solid rgba(var(--fg-rgb), 0.1);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  border: 1px solid rgba(239,236,227,0.22);
+  box-shadow: 0 28px 70px rgba(74,112,169,0.25);
   backdrop-filter: blur(20px);
 }
 

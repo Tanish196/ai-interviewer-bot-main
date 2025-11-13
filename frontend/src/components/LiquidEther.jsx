@@ -13,7 +13,7 @@ export default function LiquidEther({
   BFECC = true,
   resolution = 0.5,
   isBounce = false,
-  colors = ['#5227FF', '#FF9FFC', '#B19EEF'],
+  colors = ['#4A70A9', '#8FABD4', '#EFECE3'],
   style = {},
   className = '',
   autoDemo = true,
@@ -43,7 +43,7 @@ export default function LiquidEther({
           arr = stops;
         }
       } else {
-        arr = ['#ffffff', '#ffffff'];
+  arr = ['#EFECE3', '#EFECE3'];
       }
       const w = arr.length;
       const data = new Uint8Array(w * 4);
