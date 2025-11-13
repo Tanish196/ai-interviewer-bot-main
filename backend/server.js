@@ -8,6 +8,7 @@ const interviewRoutes = require('./routes/interviewRoutes');
 const scoreRoutes = require('./routes/scoreRoutes');
 const resumeRoutes = require('./routes/resumeRoutes');
 const profileRoutes = require('./routes/profileRoutes');
+const behaviourRoutes = require('./routes/behaviourRoutes');
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use('/api', interviewRoutes);
 app.use('/api', scoreRoutes);
 app.use('/api', resumeRoutes);
 app.use('/api', profileRoutes);
+app.use('/api', behaviourRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

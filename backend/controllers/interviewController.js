@@ -25,6 +25,17 @@ exports.generateQuestion = asyncHandler(async (req, res) => {
 
     let i = parseInt(qnoRecord.qno, 10);
     const totalQuestionsValue = Number.parseInt(numberofquestion, 10);
+    
+    // Early bail-out: prevent generating questions beyond the limit
+    if (!Number.isNaN(totalQuestionsValue) && i >= totalQuestionsValue) {
+        return res.status(400).json({
+            success: false,
+            message: `Interview complete. Already generated ${i} of ${totalQuestionsValue} questions.`,
+            questionsCompleted: i,
+            totalQuestions: totalQuestionsValue
+        });
+    }
+    
     const interviewDescriptor = Number.isNaN(totalQuestionsValue)
         ? 'an interview'
         : `a ${totalQuestionsValue}-question interview`;

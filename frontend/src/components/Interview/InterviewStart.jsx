@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { interviewService } from '../../services/auth';
+import useBehaviourTracking from '../../hooks/useBehaviourTracking';
 import './Interview.css';
 
 const InterviewStart = () => {
@@ -16,9 +17,13 @@ const InterviewStart = () => {
     const [isCameraOn, setIsCameraOn] = useState(false);
     const [showCameraPrompt, setShowCameraPrompt] = useState(false);
     const [cameraPrompt, setCameraPrompt] = useState('');
+    const [showCameraModal, setShowCameraModal] = useState(false);
+    const [cameraRequestDenied, setCameraRequestDenied] = useState(false);
     const [availableVoices, setAvailableVoices] = useState([]);
     const videoRef = useRef(null);
     const cameraStreamRef = useRef(null);
+    const hasPromptedForCameraRef = useRef(false);
+    const { startTracking, stopTracking, getBehaviourData, isTracking } = useBehaviourTracking();
     
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
@@ -110,6 +115,14 @@ const InterviewStart = () => {
         }
     }, [isSpeechEnabled]);
 
+    // Auto-prompt for camera when interview starts (step 1)
+    useEffect(() => {
+        if (step === 1 && !isCameraOn && !hasPromptedForCameraRef.current) {
+            hasPromptedForCameraRef.current = true;
+            setShowCameraModal(true);
+        }
+    }, [step, isCameraOn]);
+
     const handleSpeechToggle = () => {
         setIsSpeechEnabled((prev) => {
             const next = !prev;
@@ -120,42 +133,29 @@ const InterviewStart = () => {
         });
     };
 
-    const handleStart = async (domainArg) => {
-        if (step === 0) {
-            const text = "Enter the number of questions you want me to give:";
-            setCurrentQuestion(text);
-            speakText(text);
-            setStep(1);
-            setShowCameraPrompt(false);
-            setCameraPrompt('');
-        } else if (step === 1) {
-            const text = "Great! For a more realistic experience, please turn on your camera using the camera button below when you're ready. What domain are you looking for?";
-            setCurrentQuestion(text);
-            speakText(text);
-            setShowCameraPrompt(true);
-            setCameraPrompt('Tip: Toggle the camera button whenever you are ready so the AI can assess your body language.');
-            setStep(2);
-        } else if (step === 2) {
-            // Use explicit domainArg if provided to avoid React state update race
-            const domainToUse = (domainArg && domainArg.trim()) || domain;
-            if (!domainToUse || domainToUse.length === 0) {
-                alert('Please provide a domain.');
-                return;
-            }
+    const handleStart = async () => {
+        // Validate inputs before starting
+        if (!numberOfQuestions || numberOfQuestions <= 0) {
+            alert('Please enter a valid number of questions.');
+            return;
+        }
+        if (!domain || domain.trim().length === 0) {
+            alert('Please enter a domain for the interview.');
+            return;
+        }
 
-            setIsLoading(true);
-            try {
-                const data = await interviewService.generateQuestion(domainToUse, numberOfQuestions);
-                setQno(data.qno);
-                setCurrentQuestion(data.question);
-                speakText(data.question);
-                setStep(3);
-            } catch (error) {
-                alert('Failed to fetch question. Please try again.');
-                console.error(error);
-            } finally {
-                setIsLoading(false);
-            }
+        setIsLoading(true);
+        try {
+            const data = await interviewService.generateQuestion(domain, numberOfQuestions);
+            setQno(data.qno);
+            setCurrentQuestion(data.question);
+            speakText(data.question);
+            setStep(1);
+        } catch (error) {
+            alert('Failed to fetch question. Please try again.');
+            console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -165,48 +165,72 @@ const InterviewStart = () => {
             return;
         }
 
-        if (step === 1) {
-            const num = parseInt(answer);
-            if (isNaN(num) || num <= 0) {
-                alert('Please enter a valid number of questions.');
-                return;
-            }
-            setNumberOfQuestions(num);
+        setIsLoading(true);
+        try {
+            await interviewService.submitAnswer(answer);
+            alert('Answer submitted!');
             setAnswer('');
-            handleStart();
-        } else if (step === 2) {
-            // Use the provided answer as domain immediately to avoid setState race
-            const domainValue = answer.trim();
-            if (!domainValue) {
-                alert('Please enter a domain.');
-                return;
-            }
-            setDomain(domainValue);
-            setAnswer('');
-            // Pass domainValue directly to handleStart so we don't rely on state being updated
-            await handleStart(domainValue);
-        } else {
-            setIsLoading(true);
-            try {
-                await interviewService.submitAnswer(answer);
-                alert('Answer submitted!');
-                setAnswer('');
 
-                if (qno < numberOfQuestions) {
-                    const data = await interviewService.generateQuestion(domain, numberOfQuestions);
-                    setQno(data.qno);
-                    setCurrentQuestion(data.question);
-                    speakText(data.question);
+            if (qno < numberOfQuestions) {
+                const data = await interviewService.generateQuestion(domain, numberOfQuestions);
+                setQno(data.qno);
+                setCurrentQuestion(data.question);
+                speakText(data.question);
+            } else {
+                // Interview complete - collect behaviour data if tracking was active
+                let behaviourData = null;
+                if (isTracking) {
+                    console.log('🎯 Stopping tracking and collecting behaviour data...');
+                    stopTracking();
+                    behaviourData = getBehaviourData();
+                    console.log('📊 Behaviour data collected:', behaviourData);
                 } else {
-                    navigate('/feedback');
+                    console.log('⚠️ Tracking was not active, no behaviour data to collect');
                 }
-            } catch (error) {
-                alert('Failed to submit answer. Please try again.');
-                console.error(error);
-            } finally {
-                setIsLoading(false);
+                
+                // Navigate to feedback with behaviour data
+                navigate('/feedback', { state: { behaviourData } });
             }
+        } catch (error) {
+            alert('Failed to submit answer. Please try again.');
+            console.error(error);
+        } finally {
+            setIsLoading(false);
         }
+    };
+
+    // Handle camera modal - Enable Camera
+    const handleEnableCamera = async () => {
+        setShowCameraModal(false);
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            cameraStreamRef.current = stream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                await videoRef.current.play().catch(() => {});
+            }
+            setIsCameraOn(true);
+            setCameraRequestDenied(false);
+            
+            // Start behaviour tracking
+            if (step > 0 && !isTracking) {
+                setTimeout(() => {
+                    startTracking(videoRef);
+                }, 1000);
+            }
+        } catch (err) {
+            console.error('Camera access error:', err);
+            setCameraRequestDenied(true);
+            alert('Camera access denied. You can enable it later using the camera button, or continue without it.');
+        }
+    };
+
+    // Handle camera modal - Skip Camera
+    const handleSkipCamera = () => {
+        setShowCameraModal(false);
+        setCameraRequestDenied(true);
+        setShowCameraPrompt(true);
+        setCameraPrompt('You can enable the camera anytime using the camera button below to help the AI assess your body language.');
     };
 
     // Camera support: toggle camera preview and manage stream lifecycle
@@ -222,11 +246,23 @@ const InterviewStart = () => {
                 setIsCameraOn(true);
                 setShowCameraPrompt(false);
                 setCameraPrompt('');
+                
+                // Start behaviour tracking when camera is enabled during interview
+                if (step > 0 && !isTracking) {
+                    setTimeout(() => {
+                        startTracking(videoRef);
+                    }, 1000); // Small delay to ensure video is playing
+                }
             } catch (err) {
                 console.error('Camera access error:', err);
                 alert('Please allow camera permissions.');
             }
         } else {
+            // Stop behaviour tracking if active
+            if (isTracking) {
+                stopTracking();
+            }
+            
             // Stop tracks
             try {
                 const s = cameraStreamRef.current;
@@ -322,10 +358,42 @@ const InterviewStart = () => {
             </div>
 
             {step === 0 && (
-                <div className="start-section">
-                    <button onClick={handleStart} className="start-btn">
-                        Start Interview
-                    </button>
+                <div className="start-section mt-20">
+                    <div className="interview-setup">
+                        <h2>Setup Your Interview</h2>
+                        
+                        <div className="form-group">
+                            <label htmlFor="numberOfQuestions">Number of Questions:</label>
+                            <input
+                                type="number"
+                                id="numberOfQuestions"
+                                value={numberOfQuestions || ''}
+                                onChange={(e) => setNumberOfQuestions(parseInt(e.target.value) || 0)}
+                                placeholder="e.g., 5"
+                                min="1"
+                                max="20"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="domain">Interview Domain/Field:</label>
+                            <input
+                                type="text"
+                                id="domain"
+                                value={domain}
+                                onChange={(e) => setDomain(e.target.value)}
+                                placeholder="e.g., JavaScript, React, Node.js"
+                            />
+                        </div>
+
+                        <button 
+                            onClick={handleStart} 
+                            className="start-btn"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? 'Starting...' : 'Start Interview'}
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -393,6 +461,29 @@ const InterviewStart = () => {
                             Question {qno} of {numberOfQuestions}
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Camera Permission Modal */}
+            {showCameraModal && (
+                <div className="camera-modal-overlay">
+                    <div className="camera-modal">
+                        <h3>Enable Camera for Better Assessment</h3>
+                        <p>
+                            The AI can analyze your body language, posture, and eye contact to provide comprehensive feedback.
+                        </p>
+                        <p className="camera-modal-note">
+                            This helps improve your interview skills beyond just content quality.
+                        </p>
+                        <div className="camera-modal-actions">
+                            <button onClick={handleEnableCamera} className="btn-enable-camera">
+                                Enable Camera
+                            </button>
+                            <button onClick={handleSkipCamera} className="btn-skip-camera">
+                                Continue Without Camera
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

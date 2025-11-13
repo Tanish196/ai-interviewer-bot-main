@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import { resumeService } from '../../services/auth';
 import LiquidEther from '../LiquidEther';
 import './Resume.css';
@@ -145,12 +146,22 @@ const ResumeCheck = () => {
 
                             <div className="feedback-section">
                                 <h3>Good Points ✓</h3>
-                                <div className="feedback-content" dangerouslySetInnerHTML={{ __html: feedback.goodPoints }} />
+                                <div 
+                                    className="feedback-content" 
+                                    dangerouslySetInnerHTML={{ 
+                                        __html: DOMPurify.sanitize(feedback.goodPoints || '') 
+                                    }} 
+                                />
                             </div>
 
                             <div className="feedback-section">
                                 <h3>Areas to Improve 📈</h3>
-                                <div className="feedback-content" dangerouslySetInnerHTML={{ __html: feedback.improvementPoints }} />
+                                <div 
+                                    className="feedback-content" 
+                                    dangerouslySetInnerHTML={{ 
+                                        __html: DOMPurify.sanitize(feedback.improvementPoints || '') 
+                                    }} 
+                                />
                             </div>
 
                             <div className="action-buttons">

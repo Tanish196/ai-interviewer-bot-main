@@ -1,7 +1,7 @@
-import InterviewResult from '../components/Interview/InterviewResult';
+import InterviewResultEnhanced from '../components/Interview/InterviewResultEnhanced';
 
 const Feedback = () => {
-    return <InterviewResult />;
+    return <InterviewResultEnhanced />;
 };
 
 export default Feedback;

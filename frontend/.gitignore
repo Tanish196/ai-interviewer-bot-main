@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 *.env
+
+ARCHITECTURE.md
+TESTING_GUIDE.md

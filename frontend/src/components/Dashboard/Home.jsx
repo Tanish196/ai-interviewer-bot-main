@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileService, authService } from '../../services/auth';
+import { useLoading } from '../../context/LoadingContext';
 import Sidebar from './Sidebar';
 import LiquidEther from '../LiquidEther';
 import './Dashboard.css';
@@ -10,6 +11,7 @@ const Home = () => {
     const [profileImage, setProfileImage] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
+    const { show, hide } = useLoading();
 
     useEffect(() => {
         const storedUsername = authService.getCurrentUser() || 'DemoUser';
@@ -39,6 +41,14 @@ const Home = () => {
         authService.signout();
         alert('Signed out!');
         navigate('/');
+    };
+
+    const handleNavigate = (path, loadingText) => {
+        show(loadingText);
+        // Navigate first, then hide after a brief delay to ensure destination mounts
+        navigate(path);
+        // Hide after navigation completes (destination component should also call hide on mount)
+        setTimeout(() => hide(), 100);
     };
 
     const initials = useMemo(() => {
@@ -122,17 +132,17 @@ const Home = () => {
                         <h1>Welcome to AI Interviewer Bot</h1>
                         
                         <div className="action-cards">
-                            <div className="card" onClick={() => navigate('/interview')}>
+                            <div className="card" onClick={() => handleNavigate('/interview', 'Loading interview...')}>
                                 <h3>Start Interview</h3>
                                 <p>Begin your AI-powered interview session</p>
                             </div>
 
-                            <div className="card" onClick={() => navigate('/progress')}>
+                            <div className="card" onClick={() => handleNavigate('/progress', 'Loading progress...')}>
                                 <h3>Check Progress</h3>
                                 <p>View your interview history and scores</p>
                             </div>
 
-                            <div className="card" onClick={() => navigate('/resume')}>
+                            <div className="card" onClick={() => handleNavigate('/resume', 'Loading resume checker...')}>
                                 <h3>Check Resume</h3>
                                 <p>Get AI feedback on your resume</p>
                             </div>
