@@ -4,14 +4,12 @@ import { profileService, authService } from '../../services/auth';
 import Sidebar from './Sidebar';
 import LiquidEther from '../LiquidEther';
 import './Dashboard.css';
-import { useLoading } from '../../context/LoadingContext';
 
 const Home = () => {
     const [username, setUsername] = useState('');
     const [profileImage, setProfileImage] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
-    const { show } = useLoading();
 
     useEffect(() => {
         const storedUsername = authService.getCurrentUser() || 'DemoUser';
@@ -124,17 +122,17 @@ const Home = () => {
                         <h1>Welcome to AI Interviewer Bot</h1>
                         
                         <div className="action-cards">
-                            <div className="card" onClick={() => { show('Preparing interview…'); navigate('/interview'); }}>
+                            <div className="card" onClick={() => navigate('/interview')}>
                                 <h3>Start Interview</h3>
                                 <p>Begin your AI-powered interview session</p>
                             </div>
 
-                            <div className="card" onClick={() => { show('Loading progress…'); navigate('/progress'); }}>
+                            <div className="card" onClick={() => navigate('/progress')}>
                                 <h3>Check Progress</h3>
                                 <p>View your interview history and scores</p>
                             </div>
 
-                            <div className="card" onClick={() => { show('Loading resume tools…'); navigate('/resume'); }}>
+                            <div className="card" onClick={() => navigate('/resume')}>
                                 <h3>Check Resume</h3>
                                 <p>Get AI feedback on your resume</p>
                             </div>
