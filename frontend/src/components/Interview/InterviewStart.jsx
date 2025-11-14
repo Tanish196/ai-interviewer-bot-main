@@ -115,7 +115,6 @@ const InterviewStart = () => {
         }
     }, [isSpeechEnabled]);
 
-    // Auto-prompt for camera when interview starts (step 1)
     useEffect(() => {
         if (step === 1 && !isCameraOn && !hasPromptedForCameraRef.current) {
             hasPromptedForCameraRef.current = true;
@@ -134,7 +133,6 @@ const InterviewStart = () => {
     };
 
     const handleStart = async () => {
-        // Validate inputs before starting
         if (!numberOfQuestions || numberOfQuestions <= 0) {
             alert('Please enter a valid number of questions.');
             return;
@@ -149,7 +147,6 @@ const InterviewStart = () => {
             const data = await interviewService.generateQuestion(domain, numberOfQuestions);
             setQno(data.qno);
             setCurrentQuestion(data.question);
-            speakText(data.question);
             setStep(1);
         } catch (error) {
             alert('Failed to fetch question. Please try again.');
@@ -181,14 +178,35 @@ const InterviewStart = () => {
                 let behaviourData = null;
                 if (isTracking) {
                     console.log('🎯 Stopping tracking and collecting behaviour data...');
-                    stopTracking();
+                    await stopTracking();
                     behaviourData = getBehaviourData();
                     console.log('📊 Behaviour data collected:', behaviourData);
                 } else {
                     console.log('⚠️ Tracking was not active, no behaviour data to collect');
                 }
                 
-                // Navigate to feedback with behaviour data
+                // Stop camera when interview ends - MUST happen after tracking stops
+                if (isCameraOn && cameraStreamRef.current) {
+                    console.log('📹 Stopping camera stream...');
+                    try {
+                        // Give WebGazer time to fully release camera
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                        cameraStreamRef.current.getTracks().forEach(track => {
+                            console.log('🛑 Stopping track:', track.kind, track.label);
+                            track.stop();
+                        });
+                        cameraStreamRef.current = null;
+                        if (videoRef.current) {
+                            videoRef.current.srcObject = null;
+                        }
+                        setIsCameraOn(false);
+                        console.log('Camera fully stopped');
+                    } catch (e) {
+                        console.error('Error stopping camera:', e);
+                    }
+                }
+                
                 navigate('/feedback', { state: { behaviourData } });
             }
         } catch (error) {
@@ -218,10 +236,20 @@ const InterviewStart = () => {
                     startTracking(videoRef);
                 }, 1000);
             }
+            
+            // Speak the question after camera is enabled
+            if (currentQuestion) {
+                setTimeout(() => speakText(currentQuestion), 500);
+            }
         } catch (err) {
             console.error('Camera access error:', err);
             setCameraRequestDenied(true);
             alert('Camera access denied. You can enable it later using the camera button, or continue without it.');
+            
+            // Still speak the question even if camera fails
+            if (currentQuestion) {
+                setTimeout(() => speakText(currentQuestion), 500);
+            }
         }
     };
 
@@ -231,6 +259,11 @@ const InterviewStart = () => {
         setCameraRequestDenied(true);
         setShowCameraPrompt(true);
         setCameraPrompt('You can enable the camera anytime using the camera button below to help the AI assess your body language.');
+        
+        // Speak the question after modal is skipped
+        if (currentQuestion) {
+            setTimeout(() => speakText(currentQuestion), 300);
+        }
     };
 
     // Camera support: toggle camera preview and manage stream lifecycle
@@ -258,7 +291,6 @@ const InterviewStart = () => {
                 alert('Please allow camera permissions.');
             }
         } else {
-            // Stop behaviour tracking if active
             if (isTracking) {
                 stopTracking();
             }
@@ -279,8 +311,24 @@ const InterviewStart = () => {
     // cleanup on unmount
     useEffect(() => {
         return () => {
+            console.log('🧹 Cleaning up interview component...');
+            
+            // Stop tracking first
+            if (isTracking) {
+                stopTracking();
+            }
+            
+            // Stop camera
             const s = cameraStreamRef.current;
-            if (s) s.getTracks().forEach(t => t.stop());
+            if (s) {
+                s.getTracks().forEach(t => {
+                    console.log('🛑 Unmount cleanup - stopping track:', t.kind);
+                    t.stop();
+                });
+            }
+            cameraStreamRef.current = null;
+            
+            // Cleanup speech
             if (typeof window !== 'undefined' && window.speechSynthesis) {
                 if (voiceListenerRef.current) {
                     window.speechSynthesis.removeEventListener('voiceschanged', voiceListenerRef.current);
@@ -289,8 +337,10 @@ const InterviewStart = () => {
                 pendingSpeechRef.current = null;
                 window.speechSynthesis.cancel();
             }
+            
+            console.log('✅ Interview component cleanup complete');
         };
-    }, []);
+    }, [isTracking, stopTracking]);
 
     const handleMicToggle = async () => {
         if (!isRecording) {
@@ -412,7 +462,15 @@ const InterviewStart = () => {
 
                     {/* Camera preview - shown when camera is on */}
                     <div id="video-container" style={{ display: isCameraOn ? 'block' : 'none' }}>
-                        <video id="video" ref={videoRef} autoPlay muted playsInline style={{ width: '100%', height: '100%' }} />
+                        <video
+                            id="video"
+                            ref={videoRef}
+                            data-interview-video="true"
+                            autoPlay
+                            muted
+                            playsInline
+                            style={{ width: '100%', height: '100%' }}
+                        />
                     </div>
 
                     <div className="answer-section">

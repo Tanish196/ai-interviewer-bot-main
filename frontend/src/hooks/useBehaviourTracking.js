@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 export const useBehaviourTracking = () => {
   const [isTracking, setIsTracking] = useState(false);
+  const isTrackingRef = useRef(false);
   const metricsRef = useRef({
     gazeData: [],
     postureData: [],
@@ -24,15 +25,18 @@ export const useBehaviourTracking = () => {
   const canvasRef = useRef(null);
   const poseRef = useRef(null);
 
+  const LOG_INTERVAL_MS = 500;
+
   // Initialize WebGazer for eye tracking
   const initWebGazer = useCallback(async () => {
     try {
-      // Dynamically import webgazer
-      const webgazer = (await import('https://cdn.jsdelivr.net/npm/webgazer@3.0.0/dist/webgazer.min.js')).default;
+      // Dynamically import webgazer from local package
+      const webgazerModule = await import('webgazer');
+      const webgazer = webgazerModule.default || webgazerModule;
       
       await webgazer
         .setGazeListener((data, timestamp) => {
-          if (data == null || !isTracking) return;
+          if (data == null || !isTrackingRef.current) return;
           
           metricsRef.current.lastGazePoint = {
             x: data.x,
@@ -57,14 +61,13 @@ export const useBehaviourTracking = () => {
       console.error('WebGazer initialization failed:', error);
       return null;
     }
-  }, [isTracking]);
+  }, []);
 
   // Initialize MediaPipe Pose for posture tracking
   const initMediaPipe = useCallback(async (videoElement) => {
     try {
-      // Dynamically import MediaPipe
-      const { Pose } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js');
-      const { Camera } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js');
+      // Dynamically import MediaPipe from local package
+      const { Pose } = await import('@mediapipe/pose');
 
       const pose = new Pose({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`
@@ -86,25 +89,25 @@ export const useBehaviourTracking = () => {
       await pose.initialize();
       poseRef.current = pose;
 
-      // Start camera for pose detection
-      const camera = new Camera(videoElement, {
-        onFrame: async () => {
-          if (poseRef.current && videoElement.readyState >= 2) {
-            await poseRef.current.send({ image: videoElement });
-          }
-        },
-        width: 640,
-        height: 480
-      });
+      // Start manual video frame processing loop (replaces Camera utils)
+      const processFrame = async () => {
+        if (poseRef.current && videoElement.readyState >= 2 && isTrackingRef.current) {
+          await poseRef.current.send({ image: videoElement });
+        }
 
-      camera.start();
+        if (isTrackingRef.current) {
+          poseDetectionFrameRef.current = requestAnimationFrame(processFrame);
+        }
+      };
+
+      poseDetectionFrameRef.current = requestAnimationFrame(processFrame);
 
       return pose;
     } catch (error) {
       console.error('MediaPipe initialization failed:', error);
       return null;
     }
-  }, [isTracking]);
+  }, []);
 
   // Compute gaze metrics
   const computeGazeMetrics = useCallback((gazeHistory) => {
@@ -112,11 +115,11 @@ export const useBehaviourTracking = () => {
       return { offScreenPercent: 0, focusScore: 5 };
     }
 
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    
-    let offScreenCount = 0;
-    let gazeVariance = 0;
+  const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
+
+  let offScreenCount = 0;
+  let gazeVariance = 0;
     
     gazeHistory.forEach((point, idx) => {
       // Check if gaze is off-screen
@@ -134,10 +137,13 @@ export const useBehaviourTracking = () => {
     });
 
     const offScreenPercent = (offScreenCount / gazeHistory.length) * 100;
-    
-    // Focus score: lower variance and less off-screen = higher score
+
     const avgVariance = gazeVariance / Math.max(1, gazeHistory.length - 1);
-    const focusScore = Math.max(0, Math.min(10, 10 - (offScreenPercent / 10) - (avgVariance / 50)));
+    const normalizedVariance = Math.min(1, avgVariance / 180); // 0-1 scale ~180px variance
+    const offScreenRatio = Math.min(1, offScreenPercent / 100);
+
+    const focusQuality = (1 - offScreenRatio) * 0.6 + (1 - normalizedVariance) * 0.4;
+    const focusScore = Math.round(Math.max(0, Math.min(1, focusQuality)) * 100) / 10;
 
     return { offScreenPercent, focusScore };
   }, []);
@@ -149,6 +155,8 @@ export const useBehaviourTracking = () => {
     }
 
     let badPostureCount = 0;
+    let sampleScoreAccumulator = 0;
+    let validSamples = 0;
 
     postureHistory.forEach((keypoints) => {
       if (!keypoints || keypoints.length < 33) return;
@@ -162,27 +170,30 @@ export const useBehaviourTracking = () => {
 
       if (!leftShoulder || !rightShoulder || !nose || !leftHip || !rightHip) return;
 
-      // Check shoulder alignment (slouching)
       const shoulderYDiff = Math.abs(leftShoulder.y - rightShoulder.y);
-      const isShoulderMisaligned = shoulderYDiff > 0.1;
-
-      // Check head tilt
-      const headTilt = Math.abs(nose.x - (leftShoulder.x + rightShoulder.x) / 2);
-      const isHeadTilted = headTilt > 0.15;
-
-      // Check back alignment (leaning forward/backward)
+      const headOffset = Math.abs(nose.x - (leftShoulder.x + rightShoulder.x) / 2);
       const shoulderMidY = (leftShoulder.y + rightShoulder.y) / 2;
       const hipMidY = (leftHip.y + rightHip.y) / 2;
-      const backSlope = Math.abs(shoulderMidY - hipMidY);
-      const isBadBack = backSlope < 0.3 || backSlope > 0.5;
+      const torsoLean = Math.abs(shoulderMidY - hipMidY);
 
-      if (isShoulderMisaligned || isHeadTilted || isBadBack) {
+      const shoulderAlignmentScore = 1 - Math.min(1, shoulderYDiff / 0.2);
+      const headAlignmentScore = 1 - Math.min(1, headOffset / 0.25);
+      const torsoAlignmentScore = 1 - Math.min(1, Math.abs(torsoLean - 0.35) / 0.25);
+
+      const sampleScore = Math.max(0, Math.min(1, (shoulderAlignmentScore + headAlignmentScore + torsoAlignmentScore) / 3));
+
+      sampleScoreAccumulator += sampleScore;
+      validSamples += 1;
+
+      if (sampleScore < 0.6) {
         badPostureCount++;
       }
     });
 
-    const badPosturePercent = (badPostureCount / postureHistory.length) * 100;
-    const postureScore = Math.max(0, Math.min(10, 10 - (badPosturePercent / 10)));
+    const effectiveSamples = Math.max(1, validSamples);
+    const badPosturePercent = (badPostureCount / effectiveSamples) * 100;
+    const avgSampleScore = sampleScoreAccumulator / effectiveSamples;
+    const postureScore = Math.round(Math.max(0, Math.min(1, avgSampleScore)) * 100) / 10;
 
     return { badPosturePercent, postureScore };
   }, []);
@@ -221,7 +232,9 @@ export const useBehaviourTracking = () => {
     }
 
     const avgMovement = totalMovement / Math.max(1, postureHistory.length - 1);
-    const movementJitterScore = Math.min(10, (rapidMovementCount / postureHistory.length) * 100 + avgMovement * 100);
+    const movementIntensity = Math.min(1, avgMovement / 0.08);
+    const jitterRatio = Math.min(1, rapidMovementCount / postureHistory.length);
+    const movementJitterScore = Math.round(Math.min(10, (movementIntensity * 5 + jitterRatio * 5) * 10)) / 10;
 
     return { movementJitterScore };
   }, []);
@@ -239,12 +252,18 @@ export const useBehaviourTracking = () => {
     }
 
     // Keep only last 60 seconds of data to avoid memory issues
-    if (gazeData.length > 60) gazeData.shift();
-    if (postureData.length > 60) postureData.shift();
+    const maxSamples = Math.floor(60 * (1000 / LOG_INTERVAL_MS));
+    if (gazeData.length > maxSamples) gazeData.shift();
+    if (postureData.length > maxSamples) postureData.shift();
   }, []);
 
   // Start tracking
-  const startTracking = useCallback(async () => {
+  const startTracking = useCallback(async (externalVideoRef) => {
+    if (isTrackingRef.current) {
+      return;
+    }
+
+    isTrackingRef.current = true;
     setIsTracking(true);
     metricsRef.current = {
       gazeData: [],
@@ -255,45 +274,72 @@ export const useBehaviourTracking = () => {
       lastPoseKeypoints: null,
     };
 
-    // Initialize WebGazer
-    await initWebGazer();
+    const targetVideo = externalVideoRef?.current || videoRef.current || document.querySelector('[data-interview-video]') || document.querySelector('video');
 
-    // Initialize MediaPipe Pose (reuse existing video element if available)
-    const existingVideo = document.querySelector('video');
-    if (existingVideo) {
-      videoRef.current = existingVideo;
-      await initMediaPipe(existingVideo);
+    if (!targetVideo) {
+      console.warn('No video element found for behaviour tracking');
+      setIsTracking(false);
+      return;
     }
 
-    // Start logging every second
-    trackingIntervalRef.current = setInterval(logMetrics, 1000);
+    videoRef.current = targetVideo;
+
+    await initWebGazer();
+    await initMediaPipe(targetVideo);
+
+    if (trackingIntervalRef.current) {
+      clearInterval(trackingIntervalRef.current);
+    }
+    trackingIntervalRef.current = setInterval(logMetrics, LOG_INTERVAL_MS);
   }, [initWebGazer, initMediaPipe, logMetrics]);
 
   // Stop tracking
   const stopTracking = useCallback(async () => {
+    console.log('🛑 Stopping behaviour tracking...');
+    
+    // Set tracking to false FIRST to stop all callbacks
+    isTrackingRef.current = false;
     setIsTracking(false);
 
-    // Stop WebGazer
-    try {
-      const webgazer = window.webgazer;
-      if (webgazer) {
-        webgazer.end();
-      }
-    } catch (error) {
-      console.error('Error stopping WebGazer:', error);
-    }
-
-    // Stop MediaPipe
-    if (poseRef.current) {
-      poseRef.current.close();
-      poseRef.current = null;
-    }
-
-    // Clear intervals
+    // Clear intervals immediately
     if (trackingIntervalRef.current) {
       clearInterval(trackingIntervalRef.current);
       trackingIntervalRef.current = null;
     }
+
+    // Cancel animation frame
+    if (poseDetectionFrameRef.current) {
+      cancelAnimationFrame(poseDetectionFrameRef.current);
+      poseDetectionFrameRef.current = null;
+    }
+
+    // Stop MediaPipe first (it uses the video stream)
+    if (poseRef.current) {
+      try {
+        await poseRef.current.close();
+        poseRef.current = null;
+        console.log('✅ MediaPipe stopped');
+      } catch (error) {
+        console.error('❌ Error stopping MediaPipe:', error);
+      }
+    }
+
+    // Stop WebGazer (it may have its own camera access)
+    try {
+      const webgazer = window.webgazer;
+      if (webgazer && typeof webgazer.end === 'function') {
+        await webgazer.end();
+        console.log('✅ WebGazer stopped');
+      }
+    } catch (error) {
+      console.error('❌ Error stopping WebGazer:', error);
+    }
+
+    // Clear metrics
+    metricsRef.current.lastGazePoint = null;
+    metricsRef.current.lastPoseKeypoints = null;
+    
+    console.log('✅ Behaviour tracking fully stopped');
   }, []);
 
   // Get final behaviour data
