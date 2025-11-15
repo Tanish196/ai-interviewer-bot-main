@@ -177,12 +177,12 @@ const InterviewStart = () => {
                 // Interview complete - collect behaviour data if tracking was active
                 let behaviourData = null;
                 if (isTracking) {
-                    console.log('🎯 Stopping tracking and collecting behaviour data...');
+                    console.log('Stopping tracking and collecting behaviour data...');
                     await stopTracking();
                     behaviourData = getBehaviourData();
-                    console.log('📊 Behaviour data collected:', behaviourData);
+                    console.log('Behaviour data collected:', behaviourData);
                 } else {
-                    console.log('⚠️ Tracking was not active, no behaviour data to collect');
+                    console.log('Tracking was not active, no behaviour data to collect');
                 }
                 
                 // Stop camera when interview ends - MUST happen after tracking stops
@@ -193,7 +193,7 @@ const InterviewStart = () => {
                         await new Promise(resolve => setTimeout(resolve, 500));
                         
                         cameraStreamRef.current.getTracks().forEach(track => {
-                            console.log('🛑 Stopping track:', track.kind, track.label);
+                            console.log('Stopping track:', track.kind, track.label);
                             track.stop();
                         });
                         cameraStreamRef.current = null;
@@ -322,7 +322,7 @@ const InterviewStart = () => {
             const s = cameraStreamRef.current;
             if (s) {
                 s.getTracks().forEach(t => {
-                    console.log('🛑 Unmount cleanup - stopping track:', t.kind);
+                    console.log('Unmount cleanup - stopping track:', t.kind);
                     t.stop();
                 });
             }
@@ -338,7 +338,7 @@ const InterviewStart = () => {
                 window.speechSynthesis.cancel();
             }
             
-            console.log('✅ Interview component cleanup complete');
+            console.log('Interview component cleanup complete');
         };
     }, [isTracking, stopTracking]);
 
@@ -364,11 +364,11 @@ const InterviewStart = () => {
                         if (data.text) {
                             setAnswer(currentText + ' ' + data.text);
                         } else {
-                            setAnswer(currentText + '\n❌ Failed to transcribe.');
+                            setAnswer(currentText + '\n Failed to transcribe.');
                         }
                     } catch (err) {
                         console.error(err);
-                        setAnswer(currentText + `\n❌ Error: ${err.message}`);
+                        setAnswer(currentText + `\n Error: ${err.message}`);
                     }
 
                     stream.getTracks().forEach(track => track.stop());
