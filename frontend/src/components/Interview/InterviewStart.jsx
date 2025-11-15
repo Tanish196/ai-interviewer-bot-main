@@ -144,6 +144,9 @@ const InterviewStart = () => {
 
         setIsLoading(true);
         try {
+            // Reset any previous interview session before starting
+            await interviewService.resetInterview();
+            
             const data = await interviewService.generateQuestion(domain, numberOfQuestions);
             setQno(data.qno);
             setCurrentQuestion(data.question);

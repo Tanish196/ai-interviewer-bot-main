@@ -417,13 +417,16 @@
   }
 }
 #video-container {
-  width: 80%;
-  height: 70vh;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  aspect-ratio: 4/3;
   position: relative;
   overflow: hidden;
   background: var(--color-bg);
   border-radius: 16px;
   box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+  margin: 1.5rem auto;
 }
 
 #video {
