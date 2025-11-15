@@ -1,12 +1,12 @@
 
 .dashboard-container {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    width: 100%;
-    background: var(--color-bg);
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    position: relative;
+  margin: 0;
+  padding: clamp(2rem, 4vw, 3.5rem) clamp(1.25rem, 3vw, 2.5rem);
+  min-height: 100vh;
+  width: 100%;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  position: relative;
+  backdrop-filter: blur(18px);
 }
 
 .dashboard-container iframe {
@@ -21,11 +21,14 @@
   
 .dashboard-container .main-content {
   width: 100%;
-  min-height: 100vh;
-  padding: clamp(1.5rem, 3vw, 3rem);
-  background: var(--color-bg);
-  max-width: 1600px;
+  min-height: calc(100vh - 4rem);
+  padding: clamp(1.5rem, 2vw, 2.5rem);
+  background: linear-gradient(145deg, rgba(74, 112, 169, 0.18), rgba(0, 0, 0, 0.72));
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.12);
+  border-radius: 28px;
+  max-width: 1480px;
   margin: 0 auto;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
 }
 
 .dashboard-container .header {
@@ -33,30 +36,31 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2.5rem;
-  padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, rgba(var(--color-foreground-rgb), 0.05), rgba(var(--color-foreground-rgb), 0.02));
-  border: 1px solid rgba(var(--color-foreground-rgb), 0.08);
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
+  padding: 1.5rem 1.75rem;
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.08), rgba(var(--color-foreground-rgb), 0.04));
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.12);
+  border-radius: 20px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
   gap: 1rem;
 }
 
 .dashboard-container .sidebar-toggle {
   background: linear-gradient(135deg, rgba(var(--color-foreground-rgb), 0.08), rgba(var(--color-foreground-rgb), 0.04));
-  border: 1px solid rgba(var(--color-foreground-rgb), 0.1);
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.15);
   color: var(--color-foreground);
   font-size: 1.5rem;
   padding: 0.6rem 1.2rem;
-  border-radius: 12px;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 200ms ease;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
 }
 
 .dashboard-container .sidebar-toggle:hover {
-  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
   border-color: transparent;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.5);
 }
 
 .dashboard-container .user-info {
@@ -138,7 +142,7 @@
   text-align: center;
   font-weight: 900;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--color-foreground), rgba(var(--color-foreground-rgb), 0.7));
+  background: linear-gradient(135deg, var(--color-accent), var(--color-foreground), var(--color-primary));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -152,21 +156,21 @@
 }
 
 .dashboard-container .card {
-  background: linear-gradient(135deg, rgba(var(--color-foreground-rgb), 0.06), rgba(var(--color-foreground-rgb), 0.02));
-  border: 1px solid rgba(var(--color-foreground-rgb), 0.1);
-  border-radius: 20px;
+  background: linear-gradient(150deg, rgba(var(--color-foreground-rgb), 0.06), rgba(0, 0, 0, 0.65));
+  border: 1px solid rgba(var(--color-foreground-rgb), 0.12);
+  border-radius: 22px;
   padding: 2.5rem;
   cursor: pointer;
   transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(15px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
 }
 
 .dashboard-container .card:hover {
   transform: translateY(-8px);
-  background: linear-gradient(135deg, rgba(var(--color-foreground-rgb), 0.1), rgba(var(--color-foreground-rgb), 0.04));
+  background: linear-gradient(150deg, rgba(var(--color-foreground-rgb), 0.10), rgba(var(--color-foreground-rgb), 0.04));
   border-color: rgba(var(--color-foreground-rgb), 0.2);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.6);
 }
 
 .dashboard-container .card h3 {
@@ -302,7 +306,7 @@
 }
 
 .sidebar .signout-button {
-  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
   padding: 0.9rem 1.5rem;
   border-radius: 14px;
   border: none;
@@ -321,7 +325,7 @@
 
 .sidebar .signout-button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.6);
 }
 
 .sidebar .signout-button:active {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../../services/auth';
+import LiquidEther from '../LiquidEther';
 import './Auth.css';
 
 const SignUp = () => {
@@ -47,48 +48,71 @@ const SignUp = () => {
     };
 
     return (
-        <div className="auth-container">
-            <div className="auth-box">
-                <h2>Sign Up</h2>
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="username">Username</label>
-                        <input
-                            type="text"
-                            id="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Enter username"
-                            required
-                        />
-                    </div>
-                    
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter password"
-                            required
-                        />
-                    </div>
+        <div className="page-with-liquid">
+            <div className="liquid-ether-layer">
+                <LiquidEther
+                    className="liquid-ether-canvas"
+                    colors={['#4A70A9', '#8FABD4', '#EFECE3']}
+                    mouseForce={16}
+                    cursorSize={95}
+                    isViscous={false}
+                    viscous={30}
+                    iterationsViscous={32}
+                    iterationsPoisson={32}
+                    resolution={0.6}
+                    isBounce={false}
+                    autoDemo
+                    autoSpeed={0.55}
+                    autoIntensity={2.1}
+                    takeoverDuration={0.25}
+                    autoResumeDelay={2500}
+                    autoRampDuration={0.5}
+                />
+            </div>
 
-                    {message && (
-                        <p id="message" style={{ color: messageColor }}>
-                            {message}
-                        </p>
-                    )}
+            <div className="auth-container page-content">
+                <div className="auth-box">
+                    <h2>Sign Up</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label htmlFor="username">Username</label>
+                            <input
+                                type="text"
+                                id="username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                placeholder="Enter username"
+                                required
+                            />
+                        </div>
+                        
+                        <div className="form-group">
+                            <label htmlFor="password">Password</label>
+                            <input
+                                type="password"
+                                id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Enter password"
+                                required
+                            />
+                        </div>
 
-                    <button type="submit" disabled={isLoading}>
-                        {isLoading ? 'Signing up...' : 'Sign Up'}
-                    </button>
-                </form>
+                        {message && (
+                            <p id="message" style={{ color: messageColor }}>
+                                {message}
+                            </p>
+                        )}
 
-                <p className="auth-link">
-                    Already have an account? <Link to="/login">Sign In</Link>
-                </p>
+                        <button type="submit" disabled={isLoading}>
+                            {isLoading ? 'Signing up...' : 'Sign Up'}
+                        </button>
+                    </form>
+
+                    <p className="auth-link">
+                        Already have an account? <Link to="/login">Sign In</Link>
+                    </p>
+                </div>
             </div>
         </div>
     );

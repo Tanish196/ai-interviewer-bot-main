@@ -24,17 +24,44 @@ exports.generateQuestion = asyncHandler(async (req, res) => {
     }
 
     let i = parseInt(qnoRecord.qno, 10);
+    const totalQuestionsValue = Number.parseInt(numberofquestion, 10);
+    
+    // Early bail-out: prevent generating questions beyond the limit
+    if (!Number.isNaN(totalQuestionsValue) && i >= totalQuestionsValue) {
+        return res.status(400).json({
+            success: false,
+            message: `Interview complete. Already generated ${i} of ${totalQuestionsValue} questions.`,
+            questionsCompleted: i,
+            totalQuestions: totalQuestionsValue
+        });
+    }
+    
+    const interviewDescriptor = Number.isNaN(totalQuestionsValue)
+        ? 'an interview'
+        : `a ${totalQuestionsValue}-question interview`;
+    const totalQuestionsSuffix = Number.isNaN(totalQuestionsValue)
+        ? ''
+        : ` of ${totalQuestionsValue}`;
+    const transcript = qaRecord.questionanswer.trim();
+    const transcriptBlock = transcript || 'No candidate transcript available yet.';
 
     let prompt1;
     if (i === 0) {
-        prompt1 = `Generate a professional interview question in the domain of "${domain}".`;
+        prompt1 = `You are conducting ${interviewDescriptor} in the "${domain}" domain. You have not collected any information about the candidate yet. Ask your first question (#1) so that the candidate briefly shares their background, current role, or motivations related to "${domain}". Keep the tone professional but warm. Output only the question text without numbering, bullet points, analysis, or commentary.`;
     } else {
-        prompt1 = `Based on this previous Q&A history, generate a relevant follow-up interview question in the domain of "${domain}":\n${qaRecord.questionanswer}\n\nOnly output the question itself. Do not include analysis, explanation, or commentary.`;
+    prompt1 = `You are an attentive senior interviewer for roles in the "${domain}" domain. You have asked ${i} question(s) and are about to ask question #${i + 1}${totalQuestionsSuffix}. Use ONLY the information explicitly shared by the candidate in the transcript below to tailor the next question:
+
+${transcriptBlock}
+
+Craft the next single interview question that naturally builds on their previous answers and remains focused on the "${domain}" domain. You may reference specific details they mentioned to show active listening, but do not invent or assume facts that were not provided. Output only the question text, with no numbering, commentary, or follow-up instructions.`;
     }
 
-    const question = await generateContent(prompt1);
+    const question = (await generateContent(prompt1)).trim();
 
-    qaRecord.questionanswer += `\nQ${i + 1}: ${question}`;
+    const questionEntry = `Q${i + 1}: ${question}`;
+    qaRecord.questionanswer = qaRecord.questionanswer
+        ? `${qaRecord.questionanswer}\n${questionEntry}`
+        : questionEntry;
     await qaRecord.save();
 
     qnoRecord.qno = (i + 1).toString();
@@ -67,7 +94,10 @@ exports.addAnswer = asyncHandler(async (req, res) => {
     }
 
     let i = parseInt(qnoRecord.qno, 10);
-    qaRecord.questionanswer += `\nA${i}: ${answer}`;
+    const answerEntry = `A${i}: ${answer}`;
+    qaRecord.questionanswer = qaRecord.questionanswer
+        ? `${qaRecord.questionanswer}\n${answerEntry}`
+        : answerEntry;
     await qaRecord.save();
 
     res.json({ mes: "Added the answer to the database" });

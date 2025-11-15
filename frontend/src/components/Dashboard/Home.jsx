@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileService, authService } from '../../services/auth';
+import { useLoading } from '../../context/LoadingContext';
 import Sidebar from './Sidebar';
+import LiquidEther from '../LiquidEther';
 import './Dashboard.css';
 
 const Home = () => {
@@ -9,6 +11,7 @@ const Home = () => {
     const [profileImage, setProfileImage] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
+    const { show, hide } = useLoading();
 
     useEffect(() => {
         const storedUsername = authService.getCurrentUser() || 'DemoUser';
@@ -40,6 +43,14 @@ const Home = () => {
         navigate('/');
     };
 
+    const handleNavigate = (path, loadingText) => {
+        show(loadingText);
+        // Navigate first, then hide after a brief delay to ensure destination mounts
+        navigate(path);
+        // Hide after navigation completes (destination component should also call hide on mount)
+        setTimeout(() => hide(), 100);
+    };
+
     const initials = useMemo(() => {
         if (!username) return '?';
         const parts = username.split(/\s+/).filter(Boolean);
@@ -50,68 +61,91 @@ const Home = () => {
     }, [username]);
 
     return (
-        <div className="dashboard-container">
-            <Sidebar 
-                isOpen={sidebarOpen}
-                onClose={() => setSidebarOpen(false)}
-                onSignOut={handleSignOut}
-                username={username}
-                profileImage={profileImage}
-            />
-            
-            <div className={`overlay ${sidebarOpen ? 'show' : ''}`} onClick={() => setSidebarOpen(false)} />
+        <div className="page-with-liquid">
+            <div className="liquid-ether-layer">
+                <LiquidEther
+                    className="liquid-ether-canvas z-[-1]"
+                    colors={['#4A70A9', '#8FABD4', '#EFECE3']}
+                    mouseForce={18}
+                    cursorSize={110}
+                    isViscous={false}
+                    viscous={30}
+                    iterationsViscous={32}
+                    iterationsPoisson={32}
+                    resolution={0.55}
+                    isBounce={false}
+                    autoDemo
+                    autoSpeed={0.6}
+                    autoIntensity={2.4}
+                    takeoverDuration={0.25}
+                    autoResumeDelay={2800}
+                    autoRampDuration={0.55}
+                />
+            </div>
 
-            <div className="main-content">
-                <div className="header">
-                    <button 
-                        id="openSidebar" 
-                        className="sidebar-toggle"
-                        onClick={() => setSidebarOpen(true)}
-                    >
-                        ☰
-                    </button>
-                    <div className="user-info">
-                        <div className="avatar">
-                            {profileImage ? (
-                                <img
-                                    id="profileImage"
-                                    src={profileImage}
-                                    alt="Profile"
-                                />
-                            ) : (
-                                <span className="avatar-initials" aria-hidden="true">{initials}</span>
-                            )}
-                        </div>
-                        <div className="user-meta">
-                            <span className="user-name" id="username-display">{username}</span>
-                            <button
-                                type="button"
-                                className="profile-link"
-                                onClick={() => navigate('/profile')}
-                            >
-                                Profile Settings
-                            </button>
+            <div className="dashboard-container page-content">
+                <Sidebar
+                    isOpen={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                    onSignOut={handleSignOut}
+                    username={username}
+                    profileImage={profileImage}
+                />
+
+                <div className={`overlay ${sidebarOpen ? 'show' : ''}`} onClick={() => setSidebarOpen(false)} />
+
+                <div className="main-content">
+                    <div className="header">
+                        <button 
+                            id="openSidebar" 
+                            className="sidebar-toggle"
+                            onClick={() => setSidebarOpen(true)}
+                        >
+                            ☰
+                        </button>
+                        <div className="user-info">
+                            <div className="avatar">
+                                {profileImage ? (
+                                    <img
+                                        id="profileImage"
+                                        src={profileImage}
+                                        alt="Profile"
+                                    />
+                                ) : (
+                                    <span className="avatar-initials" aria-hidden="true">{initials}</span>
+                                )}
+                            </div>
+                            <div className="user-meta">
+                                <span className="user-name" id="username-display">{username}</span>
+                                <button
+                                    type="button"
+                                    className="profile-link"
+                                    onClick={() => navigate('/profile')}
+                                >
+                                    Profile Settings
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="dashboard-content">
-                    <h1>Welcome to AI Interviewer Bot</h1>
-                    
-                    <div className="action-cards">
-                        <div className="card" onClick={() => navigate('/interview')}>
-                            <h3>Start Interview</h3>
-                            <p>Begin your AI-powered interview session</p>
-                        </div>
+                    <div className="dashboard-content">
+                        <h1>Welcome to AI Interviewer Bot</h1>
+                        
+                        <div className="action-cards">
+                            <div className="card" onClick={() => handleNavigate('/interview', 'Loading interview...')}>
+                                <h3>Start Interview</h3>
+                                <p>Begin your AI-powered interview session</p>
+                            </div>
 
-                        <div className="card" onClick={() => navigate('/progress')}>
-                            <h3>Check Progress</h3>
-                            <p>View your interview history and scores</p>
-                        </div>
+                            <div className="card" onClick={() => handleNavigate('/progress', 'Loading progress...')}>
+                                <h3>Check Progress</h3>
+                                <p>View your interview history and scores</p>
+                            </div>
 
-                        <div className="card" onClick={() => navigate('/resume')}>
-                            <h3>Check Resume</h3>
-                            <p>Get AI feedback on your resume</p>
+                            <div className="card" onClick={() => handleNavigate('/resume', 'Loading resume checker...')}>
+                                <h3>Check Resume</h3>
+                                <p>Get AI feedback on your resume</p>
+                            </div>
                         </div>
                     </div>
                 </div>

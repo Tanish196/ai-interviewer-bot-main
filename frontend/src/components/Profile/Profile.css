@@ -128,7 +128,7 @@
 }
 
 .status.error {
-  color: #ff9393;
+  color: var(--color-accent);
 }
 
 .credentials h2 {
