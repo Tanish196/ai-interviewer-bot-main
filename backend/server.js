@@ -14,8 +14,25 @@ const app = express();
 
 // Middleware
 // Configure CORS - allow specific frontend origin in production
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'https://ai-interviewer-bot-main.vercel.app',
+    process.env.FRONTEND_URL
+].filter(Boolean);
+
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || true, // set FRONTEND_URL in production to your Vercel URL
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, Postman, etc.)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            console.log('❌ CORS blocked origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 };
 const bodyParser = require('body-parser');
