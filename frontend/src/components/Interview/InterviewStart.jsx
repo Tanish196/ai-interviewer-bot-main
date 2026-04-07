@@ -1,13 +1,67 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { interviewService } from '../../services/auth';
 import useBehaviourTracking from '../../hooks/useBehaviourTracking';
+import SetupSidebar from '../InterviewSetup/SetupSidebar';
+import SetupHeader from '../InterviewSetup/SetupHeader';
+import DomainGrid from '../InterviewSetup/DomainGrid';
+import ConfigurationPanel from '../InterviewSetup/ConfigurationPanel';
+import SessionInsightCard from '../InterviewSetup/SessionInsightCard';
 import './Interview.css';
+
+const DOMAIN_OPTIONS = [
+    {
+        value: 'DSA',
+        label: 'DSA & Problem Solving',
+        description: 'Algorithm optimization, complex data structures, and computational complexity analysis.',
+        icon: 'code',
+        iconColor: 'text-primary',
+        tags: ['Recursion', 'Dynamic Programming', 'Graph Theory'],
+        badge: 'Most Popular',
+        large: true,
+    },
+    {
+        value: 'System Design',
+        label: 'System Design',
+        description: 'Distributed systems, scalability, and high-availability architecture.',
+        icon: 'account_tree',
+        iconColor: 'text-secondary',
+    },
+    {
+        value: 'HR',
+        label: 'HR & Behavioral',
+        description: 'Soft skills, leadership, and culture-fit distillation.',
+        icon: 'psychology',
+        iconColor: 'text-tertiary',
+    },
+    {
+        value: 'Frontend',
+        label: 'Frontend Eng',
+        description: 'Performance, accessibility, and modern framework mastery.',
+        icon: 'web',
+        iconColor: 'text-primary-fixed-dim',
+    },
+    {
+        value: 'Backend',
+        label: 'Backend & API',
+        description: 'Security, concurrency, and persistent storage strategies.',
+        icon: 'database',
+        iconColor: 'text-on-secondary-container',
+    },
+];
+
+const DIFFICULTY_OPTIONS = [
+    { value: 'junior', label: 'Junior', icon: 'speed' },
+    { value: 'senior', label: 'Senior', icon: 'bolt' },
+    { value: 'expert', label: 'Expert', icon: 'local_fire_department' },
+];
 
 const InterviewStart = () => {
     const [step, setStep] = useState(0);
     const [domain, setDomain] = useState('');
-    const [numberOfQuestions, setNumberOfQuestions] = useState(0);
+    const [difficulty, setDifficulty] = useState('');
+    const [numberOfQuestions, setNumberOfQuestions] = useState(12);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [currentQuestion, setCurrentQuestion] = useState('');
     const [qno, setQno] = useState(0);
     const [answer, setAnswer] = useState('');
@@ -24,13 +78,15 @@ const InterviewStart = () => {
     const cameraStreamRef = useRef(null);
     const hasPromptedForCameraRef = useRef(false);
     const { startTracking, stopTracking, getBehaviourData, isTracking } = useBehaviourTracking();
-    
+
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
     const voicesRef = useRef([]);
     const voiceListenerRef = useRef(null);
     const pendingSpeechRef = useRef(null);
     const navigate = useNavigate();
+    const location = useLocation();
+    const hasAutoStartedRef = useRef(false);
 
     const speakText = useCallback((text) => {
         if (!isSpeechEnabled || typeof window === 'undefined' || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance === 'undefined') {
@@ -79,8 +135,8 @@ const InterviewStart = () => {
         }
 
         window.speechSynthesis.cancel();
-    pendingSpeechRef.current = null;
-    const utterance = new window.SpeechSynthesisUtterance(text);
+        pendingSpeechRef.current = null;
+        const utterance = new window.SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
         const preferredVoice = voices.find(voice => voice.name === 'Google UK English Male');
         const fallbackVoice = voices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith('en'));
@@ -132,12 +188,12 @@ const InterviewStart = () => {
         });
     };
 
-    const handleStart = async () => {
-        if (!numberOfQuestions || numberOfQuestions <= 0) {
+    const startInterviewSession = useCallback(async (selectedDomain, selectedQuestionCount) => {
+        if (!selectedQuestionCount || selectedQuestionCount <= 0) {
             alert('Please enter a valid number of questions.');
             return;
         }
-        if (!domain || domain.trim().length === 0) {
+        if (!selectedDomain || selectedDomain.trim().length === 0) {
             alert('Please enter a domain for the interview.');
             return;
         }
@@ -146,18 +202,63 @@ const InterviewStart = () => {
         try {
             // Reset any previous interview session before starting
             await interviewService.resetInterview();
-            
-            const data = await interviewService.generateQuestion(domain, numberOfQuestions);
+
+            const data = await interviewService.generateQuestion(selectedDomain, selectedQuestionCount);
             setQno(data.qno);
             setCurrentQuestion(data.question);
             setStep(1);
         } catch (error) {
+            hasAutoStartedRef.current = false;
             alert('Failed to fetch question. Please try again.');
             console.error(error);
         } finally {
             setIsLoading(false);
         }
+    }, []);
+
+    const handleSetupStart = () => {
+        if (!numberOfQuestions || numberOfQuestions < 5) {
+            alert('Please choose at least 5 questions.');
+            return;
+        }
+        if (!domain) {
+            alert('Please select an interview domain.');
+            return;
+        }
+        if (!difficulty) {
+            alert('Please select a difficulty level.');
+            return;
+        }
+
+        navigate('/interview', {
+            state: {
+                domain,
+                difficulty,
+                questionCount: numberOfQuestions,
+                fromSetup: true,
+            },
+        });
     };
+
+    useEffect(() => {
+        const setupState = location.state;
+        if (
+            step !== 0 ||
+            !setupState?.fromSetup ||
+            !setupState?.domain ||
+            !setupState?.difficulty ||
+            !setupState?.questionCount ||
+            hasAutoStartedRef.current
+        ) {
+            return;
+        }
+
+        hasAutoStartedRef.current = true;
+        setDomain(setupState.domain);
+        setDifficulty(setupState.difficulty);
+        setNumberOfQuestions(setupState.questionCount);
+        startInterviewSession(setupState.domain, setupState.questionCount);
+    }, [location.state, startInterviewSession, step]);
 
     const handleSubmitAnswer = async () => {
         if (!answer.trim()) {
@@ -187,14 +288,14 @@ const InterviewStart = () => {
                 } else {
                     console.log('Tracking was not active, no behaviour data to collect');
                 }
-                
+
                 // Stop camera when interview ends - MUST happen after tracking stops
                 if (isCameraOn && cameraStreamRef.current) {
                     console.log('📹 Stopping camera stream...');
                     try {
                         // Give WebGazer time to fully release camera
                         await new Promise(resolve => setTimeout(resolve, 500));
-                        
+
                         cameraStreamRef.current.getTracks().forEach(track => {
                             console.log('Stopping track:', track.kind, track.label);
                             track.stop();
@@ -209,7 +310,7 @@ const InterviewStart = () => {
                         console.error('Error stopping camera:', e);
                     }
                 }
-                
+
                 navigate('/feedback', { state: { behaviourData } });
             }
         } catch (error) {
@@ -228,18 +329,18 @@ const InterviewStart = () => {
             cameraStreamRef.current = stream;
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
-                await videoRef.current.play().catch(() => {});
+                await videoRef.current.play().catch(() => { });
             }
             setIsCameraOn(true);
             setCameraRequestDenied(false);
-            
+
             // Start behaviour tracking
             if (step > 0 && !isTracking) {
                 setTimeout(() => {
                     startTracking(videoRef);
                 }, 1000);
             }
-            
+
             // Speak the question after camera is enabled
             if (currentQuestion) {
                 setTimeout(() => speakText(currentQuestion), 500);
@@ -248,7 +349,7 @@ const InterviewStart = () => {
             console.error('Camera access error:', err);
             setCameraRequestDenied(true);
             alert('Camera access denied. You can enable it later using the camera button, or continue without it.');
-            
+
             // Still speak the question even if camera fails
             if (currentQuestion) {
                 setTimeout(() => speakText(currentQuestion), 500);
@@ -262,7 +363,7 @@ const InterviewStart = () => {
         setCameraRequestDenied(true);
         setShowCameraPrompt(true);
         setCameraPrompt('You can enable the camera anytime using the camera button below to help the AI assess your body language.');
-        
+
         // Speak the question after modal is skipped
         if (currentQuestion) {
             setTimeout(() => speakText(currentQuestion), 300);
@@ -277,12 +378,12 @@ const InterviewStart = () => {
                 cameraStreamRef.current = stream;
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
-                    await videoRef.current.play().catch(() => {});
+                    await videoRef.current.play().catch(() => { });
                 }
                 setIsCameraOn(true);
                 setShowCameraPrompt(false);
                 setCameraPrompt('');
-                
+
                 // Start behaviour tracking when camera is enabled during interview
                 if (step > 0 && !isTracking) {
                     setTimeout(() => {
@@ -297,7 +398,7 @@ const InterviewStart = () => {
             if (isTracking) {
                 stopTracking();
             }
-            
+
             // Stop tracks
             try {
                 const s = cameraStreamRef.current;
@@ -315,12 +416,12 @@ const InterviewStart = () => {
     useEffect(() => {
         return () => {
             console.log('🧹 Cleaning up interview component...');
-            
+
             // Stop tracking first
             if (isTracking) {
                 stopTracking();
             }
-            
+
             // Stop camera
             const s = cameraStreamRef.current;
             if (s) {
@@ -330,7 +431,7 @@ const InterviewStart = () => {
                 });
             }
             cameraStreamRef.current = null;
-            
+
             // Cleanup speech
             if (typeof window !== 'undefined' && window.speechSynthesis) {
                 if (voiceListenerRef.current) {
@@ -340,7 +441,7 @@ const InterviewStart = () => {
                 pendingSpeechRef.current = null;
                 window.speechSynthesis.cancel();
             }
-            
+
             console.log('Interview component cleanup complete');
         };
     }, [isTracking, stopTracking]);
@@ -405,48 +506,64 @@ const InterviewStart = () => {
 
     return (
         <div className="interview-container">
-            <div className="interview-header">
-                <button onClick={handleHome} className="home-btn">Home</button>
-                <h2 className="interview-title">AI Interview Session</h2>
-            </div>
+            {step > 0 && (
+                <div className="interview-header">
+                    <button onClick={handleHome} className="home-btn">Home</button>
+                    <h2 className="interview-title">AI Interview Session</h2>
+                </div>
+            )}
 
             {step === 0 && (
-                <div className="start-section mt-20">
-                    <div className="interview-setup">
-                        <h2>Setup Your Interview</h2>
-                        
-                        <div className="form-group">
-                            <label htmlFor="numberOfQuestions">Number of Questions:</label>
-                            <input
-                                type="number"
-                                id="numberOfQuestions"
-                                value={numberOfQuestions || ''}
-                                onChange={(e) => setNumberOfQuestions(parseInt(e.target.value) || 0)}
-                                placeholder="e.g., 5"
-                                min="1"
-                                max="20"
-                            />
-                        </div>
+                <div className="relative min-h-screen bg-surface text-on-surface font-body selection:bg-primary/30">
+                    <SetupSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+                    <main className="w-full min-h-screen md:pl-72">
+                        <SetupHeader onOpenSidebar={() => setSidebarOpen(true)} />
+                        <div className="w-full p-4 md:p-6 lg:p-10 xl:px-12">
+                            <div className="mb-10 md:mb-12">
+                                <span className="text-primary font-bold tracking-[0.2em] text-[10px] uppercase block mb-2">
+                                    Phase 01 — Selection
+                                </span>
+                                <h3 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight font-headline text-on-surface mb-4">
+                                    Choose Domain
+                                </h3>
+                                <p className="text-on-surface-variant max-w-2xl text-base md:text-lg">
+                                    Distill technical competence through AI-driven evaluation. Select a domain to begin the configuration.
+                                </p>
+                            </div>
 
-                        <div className="form-group">
-                            <label htmlFor="domain">Interview Domain/Field:</label>
-                            <input
-                                type="text"
-                                id="domain"
-                                value={domain}
-                                onChange={(e) => setDomain(e.target.value)}
-                                placeholder="e.g., JavaScript, React, Node.js"
-                            />
-                        </div>
+                            <DomainGrid domains={DOMAIN_OPTIONS} selectedDomain={domain} onSelectDomain={setDomain} />
 
-                        <button 
-                            onClick={handleStart} 
-                            className="start-btn"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? 'Starting...' : 'Start Interview'}
-                        </button>
-                    </div>
+                            <section
+                                id="phase-2"
+                                className="scroll-mt-28 pt-2 md:pt-4 grid grid-cols-1 xl:grid-cols-3 gap-8 md:gap-10"
+                            >
+                                <div className="lg:col-span-2 space-y-8 w-full">
+                                    <div className="mb-8">
+                                        <span className="text-primary font-bold tracking-[0.2em] text-[10px] uppercase block mb-2">
+                                            Phase 02 — Parameters
+                                        </span>
+                                        <h3 className="text-2xl md:text-3xl font-bold font-headline">Fine-tune the Alchemist</h3>
+                                    </div>
+                                    <ConfigurationPanel
+                                        questionCount={numberOfQuestions}
+                                        onQuestionCountChange={setNumberOfQuestions}
+                                        difficulty={difficulty}
+                                        onDifficultyChange={setDifficulty}
+                                        difficulties={DIFFICULTY_OPTIONS}
+                                    />
+                                </div>
+                                <div className="xl:sticky xl:top-28 h-fit">
+                                    <div className="w-full max-w-[380px]">
+                                        <SessionInsightCard
+                                            disabled={!domain || !difficulty || !numberOfQuestions}
+                                            loading={isLoading}
+                                            onStart={handleSetupStart}
+                                        />
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </main>
                 </div>
             )}
 
@@ -499,16 +616,16 @@ const InterviewStart = () => {
                                     {isCameraOn ? '📷 Stop Camera' : '📷 Camera'}
                                 </button>
                             </div>
-                            <button 
-                                id="mic" 
+                            <button
+                                id="mic"
                                 onClick={handleMicToggle}
                                 className={isRecording ? 'recording' : ''}
                             >
                                 {isRecording ? '🔴 Stop Recording' : '🎤 Record'}
                             </button>
 
-                            <button 
-                                onClick={handleSubmitAnswer} 
+                            <button
+                                onClick={handleSubmitAnswer}
                                 disabled={isLoading}
                                 className="submit-btn"
                             >
