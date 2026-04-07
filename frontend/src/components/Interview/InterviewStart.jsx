@@ -74,6 +74,8 @@ const InterviewStart = () => {
     const [showCameraModal, setShowCameraModal] = useState(false);
     const [cameraRequestDenied, setCameraRequestDenied] = useState(false);
     const [availableVoices, setAvailableVoices] = useState([]);
+    const [textInputMode, setTextInputMode] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
     const videoRef = useRef(null);
     const cameraStreamRef = useRef(null);
     const hasPromptedForCameraRef = useRef(false);
@@ -504,6 +506,10 @@ const InterviewStart = () => {
         }
     };
 
+    const handlePauseSession = () => {
+        setIsPaused((prev) => !prev);
+    };
+
     return (
         <div className="interview-container">
             {step > 0 && (
@@ -568,77 +574,209 @@ const InterviewStart = () => {
             )}
 
             {step > 0 && (
-                <div className="interview-content">
-                    <div className="question-box">
-                        <h3>Question:</h3>
-                        <p id="question">{currentQuestion}</p>
-                    </div>
-
-                    {showCameraPrompt && (
-                        <div className="camera-prompt">
-                            {cameraPrompt}
+                <div className="min-h-screen bg-[#0b1326] text-on-surface flex flex-col">
+                    <header className="w-full top-0 sticky bg-slate-950/60 backdrop-blur-xl flex justify-between items-center px-4 md:px-8 py-4 z-40 shadow-[0_20px_50px_rgba(11,19,38,0.3)]">
+                        <div className="flex items-center gap-4 md:gap-6">
+                            <span className="text-xl md:text-2xl font-bold tracking-tighter bg-gradient-to-br from-blue-300 to-blue-600 bg-clip-text text-transparent font-headline">
+                                Alchemist AI
+                            </span>
+                            <nav className="hidden md:flex gap-6 ml-4">
+                                <button type="button" onClick={handleHome} className="font-headline tracking-tight text-slate-400 hover:text-slate-200 transition-colors">Dashboard</button>
+                                <span className="font-headline tracking-tight text-blue-400 border-b-2 border-blue-400 pb-1">Interviews</span>
+                                <span className="font-headline tracking-tight text-slate-400">Analytics</span>
+                                <span className="font-headline tracking-tight text-slate-400">Library</span>
+                            </nav>
                         </div>
-                    )}
-
-                    {/* Camera preview - shown when camera is on */}
-                    <div id="video-container" style={{ display: isCameraOn ? 'block' : 'none' }}>
-                        <video
-                            id="video"
-                            ref={videoRef}
-                            data-interview-video="true"
-                            autoPlay
-                            muted
-                            playsInline
-                            style={{ width: '100%', height: '100%' }}
-                        />
-                    </div>
-
-                    <div className="answer-section">
-                        <label htmlFor="answer">Your Answer:</label>
-                        <textarea
-                            id="answer"
-                            value={answer}
-                            onChange={(e) => setAnswer(e.target.value)}
-                            rows="6"
-                            placeholder="Type your answer here or use microphone..."
-                        />
-
-                        <div className="controls">
-                            <button
-                                onClick={handleSpeechToggle}
-                                className={`voice-btn${isSpeechEnabled ? '' : ' muted'}`}
-                                type="button"
-                            >
-                                {isSpeechEnabled ? '🔊 Voice On' : '🔇 Voice Off'}
+                        <div className="flex items-center gap-2 md:gap-4">
+                            <button type="button" onClick={handleSpeechToggle} className="p-2 rounded-lg text-slate-400 hover:bg-white/5 transition-all active:scale-90">
+                                <span className="material-symbols-outlined">{isSpeechEnabled ? 'volume_up' : 'volume_off'}</span>
                             </button>
-                            <div id="cam">
-                                <button onClick={handleCameraToggle} className="cam-btn">
-                                    {isCameraOn ? '📷 Stop Camera' : '📷 Camera'}
+                            <button type="button" onClick={handleCameraToggle} className="p-2 rounded-lg text-slate-400 hover:bg-white/5 transition-all active:scale-90">
+                                <span className="material-symbols-outlined">{isCameraOn ? 'videocam' : 'videocam_off'}</span>
+                            </button>
+                            <button type="button" onClick={handleMicToggle} className={`p-2 rounded-lg transition-all active:scale-90 ${isRecording ? 'text-red-400 bg-red-500/10' : 'text-slate-400 hover:bg-white/5'}`}>
+                                <span className="material-symbols-outlined">mic</span>
+                            </button>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 overflow-hidden">
+                        <div className="h-full grid grid-cols-1 xl:grid-cols-[30%_1fr_25%]">
+                            <aside className="p-5 md:p-8 xl:p-10 flex flex-col gap-6 md:gap-8 bg-surface-container-low border-r border-white/5">
+                                <div className="flex flex-col gap-2">
+                                    <span className="text-primary text-xs font-bold uppercase tracking-widest font-label">
+                                        Question {qno || 1} of {numberOfQuestions}
+                                    </span>
+                                    <h2 id="question" className="text-2xl md:text-3xl font-headline font-extrabold leading-tight tracking-tight text-on-surface">
+                                        {currentQuestion}
+                                    </h2>
+                                </div>
+
+                                <div className="glass-card setup-card-gradient p-5 md:p-6 rounded-2xl flex flex-col gap-4 border border-white/10">
+                                    <div className="flex items-center gap-3">
+                                        <span className="material-symbols-outlined text-tertiary">psychology</span>
+                                        <span className="text-tertiary-fixed text-sm font-label font-medium uppercase tracking-wider">AI Distillation Hints</span>
+                                    </div>
+                                    <p className="text-on-surface-variant text-sm leading-relaxed">
+                                        Focus on the specific analytical tools you used and the quantifiable outcome for the stakeholders.
+                                    </p>
+                                    <div className="flex flex-wrap gap-2 mt-1">
+                                        <span className="bg-tertiary-container/30 text-on-tertiary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter">Strategic Depth</span>
+                                        <span className="bg-tertiary-container/30 text-on-tertiary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter">Data Literacy</span>
+                                    </div>
+                                </div>
+
+                                {showCameraPrompt && (
+                                    <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-on-surface-variant">
+                                        {cameraPrompt}
+                                    </div>
+                                )}
+
+                                <div className="mt-auto">
+                                    <div className="p-4 rounded-xl border border-white/5 bg-surface-container-lowest">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs text-on-surface-variant font-medium">Session Progress</span>
+                                            <span className="text-xs text-primary font-bold">
+                                                {Math.round(((qno || 1) / numberOfQuestions) * 100)}%
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                                            <div className="bg-primary h-full rounded-full transition-all duration-300" style={{ width: `${Math.round(((qno || 1) / numberOfQuestions) * 100)}%` }} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </aside>
+
+                            <section className="relative p-4 md:p-6 bg-surface flex items-center justify-center border-r border-white/5">
+                                <div id="video-container" className="w-full max-w-5xl aspect-video rounded-2xl overflow-hidden relative shadow-[0_0_30px_rgba(168,200,255,0.2)] bg-surface-container-lowest">
+                                    <video
+                                        id="video"
+                                        ref={videoRef}
+                                        data-interview-video="true"
+                                        autoPlay
+                                        muted
+                                        playsInline
+                                        className={`w-full h-full object-cover ${isCameraOn ? 'opacity-100' : 'opacity-20'}`}
+                                    />
+                                    <div className="absolute inset-0 pointer-events-none p-4 md:p-6 flex flex-col justify-between">
+                                        <div className="flex justify-between items-start gap-3">
+                                            <div className="glass-card px-4 py-2 rounded-full flex items-center gap-2 border border-white/10">
+                                                <span className={`w-2 h-2 rounded-full ${isRecording ? 'bg-green-500 animate-pulse' : 'bg-primary/70'}`} />
+                                                <span className="text-xs md:text-sm font-medium tracking-tight text-white/90">LIVE RECORDING</span>
+                                            </div>
+                                            <div className="flex gap-2 md:gap-3">
+                                                <div className="glass-card px-3 py-2 rounded-xl flex flex-col items-center min-w-[90px]">
+                                                    <span className="text-[10px] text-white/60 font-bold uppercase tracking-tighter">Eye Gaze</span>
+                                                    <span className={`font-bold text-xs md:text-sm ${isCameraOn ? 'text-primary' : 'text-slate-400'}`}>{isCameraOn ? 'Optimized' : 'Inactive'}</span>
+                                                </div>
+                                                <div className="glass-card px-3 py-2 rounded-xl flex flex-col items-center min-w-[90px]">
+                                                    <span className="text-[10px] text-white/60 font-bold uppercase tracking-tighter">Posture</span>
+                                                    <span className={`font-bold text-xs md:text-sm ${isCameraOn ? 'text-green-400' : 'text-slate-400'}`}>{isCameraOn ? 'Good' : 'Unknown'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-center items-end gap-1 h-10 md:h-12 mb-1">
+                                            <div className={`w-1.5 bg-primary rounded-full opacity-40 ${isRecording ? 'h-4 animate-pulse' : 'h-2'}`} />
+                                            <div className={`w-1.5 bg-primary rounded-full opacity-60 ${isRecording ? 'h-8 animate-pulse' : 'h-3'}`} />
+                                            <div className={`w-1.5 bg-primary rounded-full ${isRecording ? 'h-12 animate-pulse' : 'h-4'}`} />
+                                            <div className={`w-1.5 bg-primary rounded-full opacity-80 ${isRecording ? 'h-6 animate-pulse' : 'h-3'}`} />
+                                            <div className={`w-1.5 bg-primary rounded-full ${isRecording ? 'h-10 animate-pulse' : 'h-3'}`} />
+                                        </div>
+                                    </div>
+                                    {!isCameraOn && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-surface-container-lowest/70">
+                                            <span className="text-on-surface-variant text-sm">Camera is off. Enable camera to continue behavior tracking.</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+
+                            <aside className="p-4 md:p-6 xl:p-8 flex flex-col gap-4 md:gap-6 bg-surface-container-low">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-bold text-on-surface">Live Transcription</span>
+                                    <span className="material-symbols-outlined text-sm text-primary">mic</span>
+                                </div>
+                                <div className="flex-1 min-h-[220px] bg-surface-container-lowest rounded-xl p-4 md:p-5 overflow-y-auto border border-white/5">
+                                    <p className="text-sm text-on-surface-variant leading-relaxed whitespace-pre-wrap">
+                                        {answer?.trim() || 'Your live transcript appears here. Use microphone or switch to text input.'}
+                                        <span className="w-1 h-4 bg-primary inline-block align-middle ml-1 animate-pulse" />
+                                    </p>
+                                </div>
+                                {textInputMode && (
+                                    <textarea
+                                        id="answer"
+                                        value={answer}
+                                        onChange={(e) => setAnswer(e.target.value)}
+                                        rows="5"
+                                        placeholder="Type your answer here..."
+                                        className="w-full bg-surface-container-lowest rounded-xl p-4 border border-white/10 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    />
+                                )}
+                                <div className="glass-card p-4 rounded-xl">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="text-xs font-bold text-on-surface/70 tracking-wide uppercase">Real-time Metrics</span>
+                                        <span className="material-symbols-outlined text-xs text-secondary">trending_up</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] text-on-surface-variant uppercase tracking-tighter">Confidence</span>
+                                            <span className="text-lg font-headline font-extrabold text-primary">{Math.min(95, 70 + Math.round(answer.length / 12))}%</span>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] text-on-surface-variant uppercase tracking-tighter">Clarity</span>
+                                            <span className="text-lg font-headline font-extrabold text-secondary">{answer.length > 120 ? 'High' : 'Medium'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setTextInputMode((prev) => !prev)}
+                                    className="w-full glass-card py-3 rounded-full text-on-surface font-headline font-bold text-sm tracking-tight border border-white/10 hover:bg-white/5 transition-all active:scale-95"
+                                >
+                                    {textInputMode ? 'Hide Text Input' : 'Switch to Text Input'}
                                 </button>
-                            </div>
-                            <button
-                                id="mic"
-                                onClick={handleMicToggle}
-                                className={isRecording ? 'recording' : ''}
-                            >
-                                {isRecording ? '🔴 Stop Recording' : '🎤 Record'}
-                            </button>
+                            </aside>
+                        </div>
+                    </main>
 
+                    <footer className="h-20 md:h-24 bg-slate-950 px-4 md:px-10 flex items-center justify-between gap-4 z-30 border-t border-white/5">
+                        <div className="flex gap-6 md:gap-10 items-center">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Focus Level</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex gap-1">
+                                        <div className="w-1.5 h-3 bg-blue-400/80 rounded-full" />
+                                        <div className="w-1.5 h-3 bg-blue-400/80 rounded-full" />
+                                        <div className="w-1.5 h-3 bg-blue-400/80 rounded-full" />
+                                        <div className="w-1.5 h-3 bg-blue-400/80 rounded-full" />
+                                        <div className="w-1.5 h-3 bg-slate-700 rounded-full" />
+                                    </div>
+                                    <span className="text-xs text-blue-300 font-bold">{isPaused ? 'PAUSED' : 'STABLE'}</span>
+                                </div>
+                            </div>
+                            <div className="hidden md:flex flex-col">
+                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Heart Rate (Est.)</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-xs text-red-400 animate-pulse">favorite</span>
+                                    <span className="text-xs text-slate-300 font-bold">74 BPM</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 md:gap-6">
+                            <button type="button" onClick={handlePauseSession} className="text-slate-400 hover:text-white transition-colors text-xs md:text-sm font-bold uppercase tracking-widest px-3 md:px-6 py-2">
+                                {isPaused ? 'Resume Session' : 'Pause Session'}
+                            </button>
                             <button
+                                type="button"
                                 onClick={handleSubmitAnswer}
                                 disabled={isLoading}
-                                className="submit-btn"
+                                className="bg-gradient-to-br from-blue-300 to-blue-600 text-on-primary-fixed px-6 md:px-10 py-3 md:py-4 rounded-full font-headline font-extrabold tracking-tight flex items-center gap-2 md:gap-3 shadow-[0_0_30px_rgba(168,200,255,0.2)] transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {isLoading ? 'Submitting...' : 'Submit Answer'}
+                                {isLoading ? 'Submitting...' : 'Next Question'}
+                                <span className="material-symbols-outlined text-lg">arrow_forward</span>
                             </button>
                         </div>
-                    </div>
-
-                    {qno > 0 && (
-                        <div className="progress-info">
-                            Question {qno} of {numberOfQuestions}
-                        </div>
-                    )}
+                    </footer>
                 </div>
             )}
 

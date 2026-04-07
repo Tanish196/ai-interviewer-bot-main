@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 
 const navItems = [
-  { label: 'Home', icon: 'dashboard', to: '/dashboard' },
+  { label: 'Dashboard', icon: 'dashboard', to: '/dashboard' },
   { label: 'Active Sessions', icon: 'mic_external_on', to: '/interview' },
-  { label: 'Candidate Pool', icon: 'groups', to: '/progress' },
-  { label: 'Team Insights', icon: 'insights', to: '/feedback' },
-  { label: 'System Health', icon: 'analytics', to: '/profile' },
+  { label: 'Progress', icon: 'groups', to: '/progress' },
+  { label: 'Feedback', icon: 'insights', to: '/feedback' },
+  { label: 'Resume Analyzer', icon: 'description', to: '/resume' },
 ];
 
 const SetupSidebar = ({ isOpen, onClose }) => {
