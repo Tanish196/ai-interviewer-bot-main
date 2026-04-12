@@ -53,15 +53,6 @@ const SetupSidebar = ({ isOpen, onClose }) => {
               </Link>
             ))}
           </div>
-          <div className="px-6 mt-10">
-            <Link
-              to="/interview"
-              onClick={onClose}
-              className="w-full inline-flex items-center justify-center py-3 rounded-xl bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold text-sm shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
-            >
-              New Interview
-            </Link>
-          </div>
         </nav>
       </aside>
     </>
