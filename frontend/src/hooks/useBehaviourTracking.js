@@ -24,8 +24,53 @@ export const useBehaviourTracking = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const poseRef = useRef(null);
+  const isStoppingRef = useRef(false);
 
   const LOG_INTERVAL_MS = 500;
+
+  const hideWebGazerUi = useCallback(() => {
+    if (!document.getElementById('webgazer-hide-style')) {
+      const style = document.createElement('style');
+      style.id = 'webgazer-hide-style';
+      style.textContent = `
+        #webgazerVideoFeed,
+        #webgazerVideoCanvas,
+        #webgazerFaceOverlay,
+        #webgazerFaceFeedbackBox,
+        #webgazerGazeDot {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+          position: fixed !important;
+          left: -99999px !important;
+          top: -99999px !important;
+          width: 1px !important;
+          height: 1px !important;
+          z-index: -1 !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    const idsToHide = [
+      'webgazerVideoFeed',
+      'webgazerVideoCanvas',
+      'webgazerFaceOverlay',
+      'webgazerFaceFeedbackBox',
+      'webgazerGazeDot',
+    ];
+
+    idsToHide.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.style.display = 'none';
+        element.style.visibility = 'hidden';
+        element.style.pointerEvents = 'none';
+        element.style.opacity = '0';
+      }
+    });
+  }, []);
 
   // Initialize WebGazer for eye tracking
   const initWebGazer = useCallback(async () => {
@@ -34,6 +79,8 @@ export const useBehaviourTracking = () => {
       const webgazerModule = await import('webgazer');
       const webgazer = webgazerModule.default || webgazerModule;
       
+      hideWebGazerUi();
+
       await webgazer
         .setGazeListener((data, timestamp) => {
           if (data == null || !isTrackingRef.current) return;
@@ -47,21 +94,18 @@ export const useBehaviourTracking = () => {
         .begin();
 
       // Hide the default webgazer UI
-      webgazer.showVideoPreview(false);
-      webgazer.showPredictionPoints(false);
-
-      // Calibration can be optional - remove overlay
-      const webgazerCanvas = document.getElementById('webgazerVideoCanvas');
-      if (webgazerCanvas) {
-        webgazerCanvas.style.display = 'none';
-      }
+      webgazer.showVideoPreview?.(false);
+      webgazer.showPredictionPoints?.(false);
+      webgazer.showFaceOverlay?.(false);
+      webgazer.showFaceFeedbackBox?.(false);
+      hideWebGazerUi();
 
       return webgazer;
     } catch (error) {
       console.error('WebGazer initialization failed:', error);
       return null;
     }
-  }, []);
+  }, [hideWebGazerUi]);
 
   // Initialize MediaPipe Pose for posture tracking
   const initMediaPipe = useCallback(async (videoElement) => {
@@ -81,7 +125,7 @@ export const useBehaviourTracking = () => {
       });
 
       pose.onResults((results) => {
-        if (!isTracking || !results.poseLandmarks) return;
+        if (!isTrackingRef.current || !results.poseLandmarks) return;
         
         metricsRef.current.lastPoseKeypoints = results.poseLandmarks;
       });
@@ -278,6 +322,7 @@ export const useBehaviourTracking = () => {
 
     if (!targetVideo) {
       console.warn('No video element found for behaviour tracking');
+      isTrackingRef.current = false;
       setIsTracking(false);
       return;
     }
@@ -295,52 +340,102 @@ export const useBehaviourTracking = () => {
 
   // Stop tracking
   const stopTracking = useCallback(async () => {
-    console.log('🛑 Stopping behaviour tracking...');
-    
-    // Set tracking to false FIRST to stop all callbacks
-    isTrackingRef.current = false;
-    setIsTracking(false);
-
-    // Clear intervals immediately
-    if (trackingIntervalRef.current) {
-      clearInterval(trackingIntervalRef.current);
-      trackingIntervalRef.current = null;
+    if (isStoppingRef.current) {
+      return;
     }
-
-    // Cancel animation frame
-    if (poseDetectionFrameRef.current) {
-      cancelAnimationFrame(poseDetectionFrameRef.current);
-      poseDetectionFrameRef.current = null;
-    }
-
-    // Stop MediaPipe first (it uses the video stream)
-    if (poseRef.current) {
-      try {
-        await poseRef.current.close();
-        poseRef.current = null;
-        console.log('✅ MediaPipe stopped');
-      } catch (error) {
-        console.error('❌ Error stopping MediaPipe:', error);
-      }
-    }
-
-    // Stop WebGazer (it may have its own camera access)
+    isStoppingRef.current = true;
     try {
-      const webgazer = window.webgazer;
-      if (webgazer && typeof webgazer.end === 'function') {
-        await webgazer.end();
-        console.log('✅ WebGazer stopped');
-      }
-    } catch (error) {
-      console.error('❌ Error stopping WebGazer:', error);
-    }
+      console.log('🛑 Stopping behaviour tracking...');
+      
+      // Set tracking to false FIRST to stop all callbacks
+      isTrackingRef.current = false;
+      setIsTracking(false);
 
-    // Clear metrics
-    metricsRef.current.lastGazePoint = null;
-    metricsRef.current.lastPoseKeypoints = null;
-    
-    console.log('✅ Behaviour tracking fully stopped');
-  }, []);
+      // Clear intervals immediately
+      if (trackingIntervalRef.current) {
+        clearInterval(trackingIntervalRef.current);
+        trackingIntervalRef.current = null;
+      }
+
+      // Cancel animation frame
+      if (poseDetectionFrameRef.current) {
+        cancelAnimationFrame(poseDetectionFrameRef.current);
+        poseDetectionFrameRef.current = null;
+      }
+
+      // Stop MediaPipe first (it uses the video stream)
+      if (poseRef.current) {
+        try {
+          await poseRef.current.close();
+          console.log('✅ MediaPipe stopped');
+        } catch (error) {
+          const msg = String(error?.message || '');
+          if (msg.includes('already deleted')) {
+            console.warn('ℹ️ MediaPipe was already closed');
+          } else {
+            console.error('❌ Error stopping MediaPipe:', error);
+          }
+        } finally {
+          poseRef.current = null;
+        }
+      }
+
+      // Stop WebGazer (it may have its own camera access)
+      try {
+        const webgazer = window.webgazer;
+        webgazer?.pause?.();
+        webgazer?.showVideoPreview?.(false);
+        webgazer?.showPredictionPoints?.(false);
+        webgazer?.showFaceOverlay?.(false);
+        webgazer?.showFaceFeedbackBox?.(false);
+        webgazer?.setGazeListener?.(() => {});
+        if (webgazer && typeof webgazer.end === 'function') {
+          await webgazer.end();
+          console.log('✅ WebGazer stopped');
+        }
+      } catch (error) {
+        console.error('❌ Error stopping WebGazer:', error);
+      }
+
+      // Force-release any stream attached by WebGazer feed elements
+      const webgazerFeed = document.getElementById('webgazerVideoFeed');
+      if (webgazerFeed && webgazerFeed.srcObject) {
+        try {
+          webgazerFeed.srcObject.getTracks().forEach((track) => track.stop());
+          webgazerFeed.srcObject = null;
+        } catch (error) {
+          console.error('❌ Error force-stopping WebGazer feed:', error);
+        }
+      }
+
+      hideWebGazerUi();
+
+      // Clear metrics
+      metricsRef.current.lastGazePoint = null;
+      metricsRef.current.lastPoseKeypoints = null;
+      
+      console.log('✅ Behaviour tracking fully stopped');
+    } finally {
+      isStoppingRef.current = false;
+    }
+  }, [hideWebGazerUi]);
+
+  const getLiveMetrics = useCallback(() => {
+    const { gazeData, postureData } = metricsRef.current;
+    const { offScreenPercent, focusScore } = computeGazeMetrics(gazeData);
+    const { badPosturePercent, postureScore } = computePostureMetrics(postureData);
+
+    return {
+      offScreenPercent: Math.round(offScreenPercent * 10) / 10,
+      focusScore: Math.round(focusScore * 10) / 10,
+      badPosturePercent: Math.round(badPosturePercent * 10) / 10,
+      postureScore: Math.round(postureScore * 10) / 10,
+      sampleCount: {
+        gaze: gazeData.length,
+        posture: postureData.length,
+      },
+    };
+  }, [computeGazeMetrics, computePostureMetrics]);
 
   // Get final behaviour data
   const getBehaviourData = useCallback(() => {
@@ -384,6 +479,7 @@ export const useBehaviourTracking = () => {
     startTracking,
     stopTracking,
     getBehaviourData,
+    getLiveMetrics,
     isTracking,
   };
 };

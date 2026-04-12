@@ -27,6 +27,11 @@ const InterviewProgress = () => {
     const [availableVoices, setAvailableVoices] = useState([]);
     const [textInputMode, setTextInputMode] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
+    const [liveBehaviour, setLiveBehaviour] = useState({
+        focusScore: 0,
+        postureScore: 0,
+        sampleCount: { gaze: 0, posture: 0 },
+    });
 
     const videoRef = useRef(null);
     const cameraStreamRef = useRef(null);
@@ -38,7 +43,7 @@ const InterviewProgress = () => {
     const voiceListenerRef = useRef(null);
     const pendingSpeechRef = useRef(null);
 
-    const { startTracking, stopTracking, getBehaviourData, isTracking } = useBehaviourTracking();
+    const { startTracking, stopTracking, getBehaviourData, getLiveMetrics, isTracking } = useBehaviourTracking();
 
     const speakText = useCallback((text) => {
         if (!isSpeechEnabled || typeof window === 'undefined' || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance === 'undefined') {
@@ -122,6 +127,18 @@ const InterviewProgress = () => {
             setShowCameraModal(true);
         }
     }, [qno, isCameraOn]);
+
+    useEffect(() => {
+        if (!isTracking) {
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setLiveBehaviour(getLiveMetrics());
+        }, 800);
+
+        return () => clearInterval(timer);
+    }, [isTracking, getLiveMetrics]);
 
     const startInterviewSession = useCallback(async (selectedDomain, selectedQuestionCount) => {
         setIsLoading(true);
@@ -234,27 +251,38 @@ const InterviewProgress = () => {
             }
             try {
                 const stream = cameraStreamRef.current;
-                if (stream) stream.getTracks().forEach((track) => track.stop());
+                if (stream) {
+                    stream.getTracks().forEach((track) => {
+                        track.stop();
+                    });
+                }
             } catch (e) {
                 console.error('Error stopping camera:', e);
             }
             cameraStreamRef.current = null;
-            if (videoRef.current) videoRef.current.srcObject = null;
+            if (videoRef.current) {
+                videoRef.current.pause?.();
+                videoRef.current.srcObject = null;
+            }
             setIsCameraOn(false);
         }
     };
 
     useEffect(() => {
         return () => {
-            if (isTracking) {
-                stopTracking();
-            }
+            stopTracking();
 
             const stream = cameraStreamRef.current;
             if (stream) {
-                stream.getTracks().forEach((track) => track.stop());
+                stream.getTracks().forEach((track) => {
+                    track.stop();
+                });
             }
             cameraStreamRef.current = null;
+            if (videoRef.current) {
+                videoRef.current.pause?.();
+                videoRef.current.srcObject = null;
+            }
 
             if (typeof window !== 'undefined' && window.speechSynthesis) {
                 if (voiceListenerRef.current) {
@@ -265,7 +293,7 @@ const InterviewProgress = () => {
                 window.speechSynthesis.cancel();
             }
         };
-    }, [isTracking, stopTracking]);
+    }, [stopTracking]);
 
     const handleMicToggle = async () => {
         if (!isRecording) {
@@ -339,9 +367,12 @@ const InterviewProgress = () => {
                 if (isCameraOn && cameraStreamRef.current) {
                     try {
                         await new Promise((resolve) => setTimeout(resolve, 500));
-                        cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+                        cameraStreamRef.current.getTracks().forEach((track) => {
+                            track.stop();
+                        });
                         cameraStreamRef.current = null;
                         if (videoRef.current) {
+                            videoRef.current.pause?.();
                             videoRef.current.srcObject = null;
                         }
                         setIsCameraOn(false);
@@ -381,6 +412,20 @@ const InterviewProgress = () => {
     const clarityLevel = answer.length > 160 ? 'High' : answer.length > 70 ? 'Medium' : 'Building';
     const transcriptText = answer?.trim() || 'Your live transcript appears here. Use microphone or switch to text input.';
     const focusBars = [12, 24, 40, 18, 30];
+    const eyeGazeLabel = !isCameraOn
+        ? 'Inactive'
+        : liveBehaviour.sampleCount?.gaze < 4
+            ? 'Calibrating'
+            : liveBehaviour.focusScore >= 6.5
+                ? 'Optimized'
+                : 'Needs Focus';
+    const postureLabel = !isCameraOn
+        ? 'Unknown'
+        : liveBehaviour.sampleCount?.posture < 4
+            ? 'Calibrating'
+            : liveBehaviour.postureScore >= 6
+                ? 'Good'
+                : 'Adjust';
 
     return (
         <div className="min-h-screen bg-[#0b1326] text-on-surface flex flex-col overflow-hidden">
@@ -470,11 +515,11 @@ const InterviewProgress = () => {
                                     <div className="flex gap-2 md:gap-3">
                                         <div className="glass-card px-3 py-2 rounded-xl flex flex-col items-center min-w-[96px] border border-white/10">
                                             <span className="text-[10px] text-white/60 font-bold uppercase tracking-tighter">Eye Gaze</span>
-                                            <span className={`font-bold text-xs md:text-sm ${isCameraOn ? 'text-primary' : 'text-slate-400'}`}>{isCameraOn ? 'Optimized' : 'Inactive'}</span>
+                                            <span className={`font-bold text-xs md:text-sm ${isCameraOn ? 'text-primary' : 'text-slate-400'}`}>{eyeGazeLabel}</span>
                                         </div>
                                         <div className="glass-card px-3 py-2 rounded-xl flex flex-col items-center min-w-[96px] border border-white/10">
                                             <span className="text-[10px] text-white/60 font-bold uppercase tracking-tighter">Posture</span>
-                                            <span className={`font-bold text-xs md:text-sm ${isCameraOn ? 'text-green-400' : 'text-slate-400'}`}>{isCameraOn ? 'Good' : 'Unknown'}</span>
+                                            <span className={`font-bold text-xs md:text-sm ${isCameraOn ? 'text-green-400' : 'text-slate-400'}`}>{postureLabel}</span>
                                         </div>
                                     </div>
                                 </div>
